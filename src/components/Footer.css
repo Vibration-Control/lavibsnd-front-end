@@ -1,0 +1,10 @@
+/* Custom styles for Footer */
+
+footer {
+    background-color: #343a40;
+    color: white;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+  }
+  
