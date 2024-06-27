@@ -1,0 +1,45 @@
+{
+  "name": "lavibsnd-front-end",
+  "version": "1.0.0",
+  "description": "A modern front-end for the Vibration Neutralizer software using React and Bootstrap",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [
+    "react",
+    "bootstrap",
+    "vibration",
+    "neutralizer",
+    "software"
+  ],
+  "author": "Eduardo Salmoria Fantin",
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "^5.2.0",
+    "react": "^18.0.0",
+    "react-bootstrap": "^2.7.4",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.23.1",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-react-app": "^7.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
