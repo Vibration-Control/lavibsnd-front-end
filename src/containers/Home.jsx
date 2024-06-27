@@ -50,16 +50,25 @@ const MainContent = () => {
       </Container>
 
       {/* About Section */}
+      {/* About Section */}
       <Container className="my-5" id="about">
         <Row>
           <Col>
             <h2>About Us</h2>
-            <p>
-              LavibsND is dedicated to providing the best vibration neutralization solutions to help you maintain optimal machine performance and extend equipment lifespan.
-            </p>
-            <p>
-              Created by <a href="https://www.linkedin.com/in/eduardo-salmoria-fantin-210305182/" target="_blank" rel="noopener noreferrer">Eduardo Salmoria Fantin</a>.
-            </p>
+            <Card className="mb-4">
+              <Card.Body>
+                <Card.Title>Team Members</Card.Title>
+                <Card.Text>
+                  <strong>Developer:</strong> Eduardo Salmoria Fantin - <a href="https://www.linkedin.com/in/eduardo-salmoria-fantin-210305182/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                </Card.Text>
+                <Card.Text>
+                  <strong>Coordinator:</strong> Professor Carlos Alberto Bavastri
+                </Card.Text>
+                <Card.Text>
+                  <strong>Acknowledgements:</strong> Professor José João de Espindola
+                </Card.Text>
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
       </Container>
