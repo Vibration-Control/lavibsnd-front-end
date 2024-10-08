@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Table, Button, Form } from 'react-bootstrap';
+import ViscoelasticMaterials from './ViscoelasticMaterials';
+import DynamicStiffness from './DynamicStiffness';
 
 const NeutralizerData = () => {
   const [rows, setRows] = useState([]);
@@ -158,6 +160,12 @@ const NeutralizerData = () => {
           ))}
         </tbody>
       </Table>
+
+      {/* ViscoelasticMaterials Component */}
+      <ViscoelasticMaterials />
+
+      {/* DynamicStiffness Component */}
+      <DynamicStiffness />
     </div>
   );
 };
