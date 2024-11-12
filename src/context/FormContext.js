@@ -22,8 +22,8 @@ export const FormProvider = ({ children }) => {
       dynamicStiffness: []
     },
     calculationParameters: {
-      frequencyLowerBoundOpt: '',
-      frequencyUpperBoundOpt: '',
+      frequencyLowerBoundOpt: 1.0,
+      frequencyUpperBoundOpt: 2.0,
       frequencyDiscretizationOpt: '',
       excitationPointOpt: '',
       responsePointOpt: '',
