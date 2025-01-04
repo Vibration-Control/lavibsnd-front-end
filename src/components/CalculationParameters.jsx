@@ -1,23 +1,16 @@
-import React, { useContext } from 'react';
-import { Form, Row, Col } from 'react-bootstrap';
-import { FormContext } from '../context/FormContext';
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { Form, Row, Col, Button } from 'react-bootstrap';
 
-const CalculationParameters = () => {
-  const { formData, handleInputChange } = useContext(FormContext);
+const CalculationParameters = ({ control, errors }) => {
 
-  const handleInput = (field, value, isFloat = false) => {
-    let parsedValue;
-    if (isFloat) {
-      parsedValue = parseFloat(value); // Parse as float for specific fields
-    } else {
-      parsedValue = parseInt(value, 10); // Parse as integer for other fields
+  const rules = {
+    required: 'This field is required',
+    pattern: {
+      value: /^\d+(\.\d+)?$/,
+      message: 'Please enter a valid number'
     }
-
-    handleInputChange('calculationParameters', {
-      ...formData.calculationParameters,
-      [field]: isNaN(parsedValue) ? '' : parsedValue // Set to '' if parsing fails
-    });
-  };
+  }
 
   return (
     <Form>
@@ -26,36 +19,75 @@ const CalculationParameters = () => {
         <Col>
           <Form.Group controlId="frequencyLowerBoundOpt">
             <Form.Label>Frequency Lower Bound</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 10.5"
-              value={formData.calculationParameters.frequencyLowerBoundOpt}
-              onChange={(e) => handleInput('frequencyLowerBoundOpt', e.target.value, true)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.frequencyLowerBoundOpt"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 10.5"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.frequencyLowerBoundOpt && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.frequencyLowerBoundOpt.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="frequencyUpperBoundOpt">
             <Form.Label>Frequency Upper Bound</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 50.0"
-              value={formData.calculationParameters.frequencyUpperBoundOpt}
-              onChange={(e) => handleInput('frequencyUpperBoundOpt', e.target.value, true)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.frequencyUpperBoundOpt"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 50.0"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.frequencyUpperBoundOpt && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.frequencyUpperBoundOpt.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="frequencyDiscretizationOpt">
             <Form.Label>Frequency Discretization</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 5"
-              value={formData.calculationParameters.frequencyDiscretizationOpt}
-              onChange={(e) => handleInput('frequencyDiscretizationOpt', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.frequencyDiscretizationOpt"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 5"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.frequencyDiscretizationOpt && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.frequencyDiscretizationOpt.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
@@ -64,24 +96,50 @@ const CalculationParameters = () => {
         <Col>
           <Form.Group controlId="excitationPointOpt">
             <Form.Label>Excitation Point</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 3"
-              value={formData.calculationParameters.excitationPointOpt}
-              onChange={(e) => handleInput('excitationPointOpt', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.excitationPointOpt"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 3"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.excitationPointOpt && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.excitationPointOpt.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="responsePointOpt">
             <Form.Label>Response Point</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 2"
-              value={formData.calculationParameters.responsePointOpt}
-              onChange={(e) => handleInput('responsePointOpt', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.responsePointOpt"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 2"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.responsePointOpt && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.responsePointOpt.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
@@ -94,62 +152,128 @@ const CalculationParameters = () => {
         <Col>
           <Form.Group controlId="frequencyLowerBoundPlot">
             <Form.Label>Frequency Lower Bound</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 10.5"
-              value={formData.calculationParameters.frequencyLowerBoundPlot}
-              onChange={(e) => handleInput('frequencyLowerBoundPlot', e.target.value, true)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.frequencyLowerBoundPlot"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 10.5"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.frequencyLowerBoundPlot && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.frequencyLowerBoundPlot.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="frequencyUpperBoundPlot">
             <Form.Label>Frequency Upper Bound</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 50.0"
-              value={formData.calculationParameters.frequencyUpperBoundPlot}
-              onChange={(e) => handleInput('frequencyUpperBoundPlot', e.target.value, true)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.frequencyUpperBoundPlot"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 50.0"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.frequencyUpperBoundPlot && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.frequencyUpperBoundPlot.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="frequencyDiscretizationPlot">
             <Form.Label>Frequency Discretization</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 5"
-              value={formData.calculationParameters.frequencyDiscretizationPlot}
-              onChange={(e) => handleInput('frequencyDiscretizationPlot', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.frequencyDiscretizationPlot"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 5"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.frequencyDiscretizationPlot && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.frequencyDiscretizationPlot.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
       </Row>
+
       <Row className="mb-3">
         <Col>
           <Form.Group controlId="excitationPointPlot">
             <Form.Label>Excitation Point</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 3"
-              value={formData.calculationParameters.excitationPointPlot}
-              onChange={(e) => handleInput('excitationPointPlot', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.excitationPointPlot"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 3"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.excitationPointPlot && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.excitationPointPlot.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="responsePointPlot">
             <Form.Label>Response Point</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 2"
-              value={formData.calculationParameters.responsePointPlot}
-              onChange={(e) => handleInput('responsePointPlot', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.responsePointPlot"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 2"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.responsePointPlot && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.responsePointPlot.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
@@ -162,48 +286,100 @@ const CalculationParameters = () => {
         <Col>
           <Form.Group controlId="populationSize">
             <Form.Label>Population Size</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 100"
-              value={formData.calculationParameters.populationSize}
-              onChange={(e) => handleInput('populationSize', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.populationSize"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 100"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.populationSize && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.populationSize.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="generations">
             <Form.Label>Generations</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 50"
-              value={formData.calculationParameters.generations}
-              onChange={(e) => handleInput('generations', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.generations"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 50"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.generations && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.generations.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="crossover">
             <Form.Label>Crossover</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 20"
-              value={formData.calculationParameters.crossover}
-              onChange={(e) => handleInput('crossover', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.crossover"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="text"
+                    placeholder="e.g., 20"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.crossover && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.crossover.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
         <Col>
           <Form.Group controlId="mutation">
             <Form.Label>Mutation</Form.Label>
-            <Form.Control
-              type="text" // Changed to text to allow validation logic
-              placeholder="e.g., 5"
-              value={formData.calculationParameters.mutation}
-              onChange={(e) => handleInput('mutation', e.target.value)}
-              className="rounded"
+            <Controller
+              name="calculationParameters.mutation"
+              control={control}
+              rules={rules}
+              render={({ field }) => (
+                <>
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    placeholder="e.g., 5"
+                    className="rounded"
+                  />
+                  {errors.calculationParameters?.mutation && (
+                    <Form.Text className="text-danger">
+                      {errors.calculationParameters.mutation.message}
+                    </Form.Text>
+                  )}
+                </>
+              )}
             />
           </Form.Group>
         </Col>
