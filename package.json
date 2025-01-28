@@ -20,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "bootstrap": "^5.2.0",
+    "chart.js": "^4.4.7",
     "react": "^18.0.0",
     "react-bootstrap": "^2.7.4",
     "react-chartjs-2": "^5.2.0",

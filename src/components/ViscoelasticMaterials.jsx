@@ -1,9 +1,31 @@
 import React, { useState } from 'react';
 import { Table, Button, Form } from 'react-bootstrap';
+import { Line } from 'react-chartjs-2';
+import Chart from 'chart.js/auto';
+
+const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+const isothermalTemperatures = [253, 273, 293, 313, 333];
+
+Chart.register();
+
+
+const generatePowerOf10Ticks = (minPower, maxPower) => {
+  const ticks = [];
+  for (let i = minPower; i <= maxPower; i++) {
+    ticks.push(Math.pow(10, i));
+  }
+  return ticks;
+};
+
+const formatPowerOf10 = (value) => {
+  const exponent = Math.log10(value);
+  return `10^${Math.round(exponent)}`;
+};
 
 const ViscoelasticMaterial = () => {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [plottedRows, setPlottedRows] = useState([]);
 
   const generateUniqueId = () => Date.now() + Math.random();
 
@@ -28,16 +50,142 @@ const ViscoelasticMaterial = () => {
   };
 
   const toggleRowSelection = (id) => {
-    if (selectedRows.includes(id)) {
-      setSelectedRows(selectedRows.filter(rowId => rowId !== id));
-    } else {
-      setSelectedRows([...selectedRows, id]);
-    }
+    setSelectedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
   const removeSelectedRows = () => {
-    setRows(rows.filter(row => !selectedRows.includes(row.id)));
+    const remainingRows = rows.filter(row => !selectedRows.includes(row.id));
+    setRows(remainingRows);
+    setPlottedRows(prev => prev.filter(id => !selectedRows.includes(id)));
     setSelectedRows([]);
+  };
+
+  const togglePlot = (id) => {
+    setPlottedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const calculateAlphaT = (T, row) => {
+    const T0 = parseFloat(row.referenceTemperature);
+    const theta1 = parseFloat(row.teta1);
+    const theta2 = parseFloat(row.teta2);
+    
+    if ([T, T0, theta1, theta2].some(isNaN)) return NaN;
+    
+    const exponent = -theta1 * (T - T0) / (theta2 + (T - T0));
+    return Math.pow(10, exponent);
+  };
+
+  const generateNomogramData = (row) => {
+    const G0 = parseFloat(row.lowerShearModulus);
+    const Ginf = parseFloat(row.upperShearModulus);
+    const b = parseFloat(row.temperatureShiftingFactor);
+    const alpha = parseFloat(row.fractionalDerivativeParameter);
+    
+    if ([G0, Ginf, b, alpha].some(isNaN)) return null;
+
+    // Generate frequencies from 1e-10 to 1e10
+    const frequencies = Array.from({ length: 200 }, (_, i) => 
+      Math.pow(10, (i/200)*20 - 10)
+    );
+
+    const data = { G: [], eta: [], omega: [], isotherms: [] };
+
+    // Generate main curves
+    frequencies.forEach(f => {
+      const omega = f;
+      const bOmega = b * omega;
+      const angle = (alpha * Math.PI) / 2;
+      
+      const term1 = Math.pow(bOmega, alpha);
+      const term2 = Math.pow(bOmega, 2*alpha);
+      
+      // Shear modulus
+      const numeratorG = G0 + (G0 + Ginf) * term1 * Math.cos(angle) + Ginf * term2;
+      const denominatorG = 1 + 2 * term1 * Math.cos(angle) + term2;
+      const G = numeratorG / denominatorG;
+      
+      // Loss factor
+      const numeratorEta = (Ginf - G0) * term1 * Math.sin(angle);
+      const denominatorEta = G0 + (G0 + Ginf) * term1 * Math.cos(angle) + Ginf * term2;
+      const eta = numeratorEta / denominatorEta;
+      
+      data.omega.push(omega);
+      data.G.push(G);
+      data.eta.push(eta);
+    });
+
+    // Generate isothermal lines
+    isothermalTemperatures.forEach(T => {
+      const alphaT = calculateAlphaT(T, row);
+      if (!alphaT) return;
+      
+      const isoData = data.omega.map(omega => ({
+        x: omega,
+        y: omega / alphaT // Original frequency
+      }));
+      
+      data.isotherms.push({
+        temperature: T,
+        data: isoData
+      });
+    });
+
+    return data;
+  };
+
+  const chartData = {
+    datasets: plottedRows.flatMap((rowId, index) => {
+      const row = rows.find(r => r.id === rowId);
+      if (!row) return [];
+      const materialData = generateNomogramData(row);
+      if (!materialData) return [];
+      
+      const color = colors[index % colors.length];
+      const datasets = [];
+
+      // Main curves
+      datasets.push(
+        {
+          label: `Shear Modulus (Material ${index + 1})`,
+          data: materialData.G.map((g, i) => ({ 
+            x: materialData.omega[i], 
+            y: g 
+          })),
+          borderColor: color,
+          borderWidth: 2,
+          yAxisID: 'yLeft',
+          pointRadius: 0,
+        },
+        {
+          label: `Loss Factor (Material ${index + 1})`,
+          data: materialData.eta.map((eta, i) => ({ 
+            x: materialData.omega[i], 
+            y: eta 
+          })),
+          borderColor: color,
+          borderDash: [5, 5],
+          borderWidth: 1,
+          yAxisID: 'yLeft',
+          pointRadius: 0,
+        }
+      );
+
+      // Isothermal lines
+      materialData.isotherms.forEach((iso, isoIndex) => {
+        datasets.push({
+          label: `${iso.temperature}K Ref (M${index + 1})`,
+          data: iso.data,
+          borderColor: '#888',
+          borderWidth: 0.5,
+          pointRadius: 0,
+          yAxisID: 'yRight',
+          showLine: true,
+          datalabels: { display: false }
+        });
+      });
+
+      return datasets;
+    }).filter(Boolean)
   };
 
   return (
@@ -45,7 +193,9 @@ const ViscoelasticMaterial = () => {
       <h5>Viscoelastic Material</h5>
 
       <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={addViscoelasticMaterial}>Add Viscoelastic Material</Button>
+        <Button variant="primary" onClick={addViscoelasticMaterial}>
+          Add Viscoelastic Material
+        </Button>
         <Button
           variant="danger"
           disabled={selectedRows.length === 0}
@@ -67,95 +217,166 @@ const ViscoelasticMaterial = () => {
             <th>Temperature Shifting Factor</th>
             <th>Teta 1</th>
             <th>Teta 2</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              {/* Select Checkbox */}
-              <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={selectedRows.includes(row.id)}
-                  onChange={() => toggleRowSelection(row.id)}
-                />
-              </td>
-              {/* Working Temperature */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.workingTemperature}
-                  onChange={(e) => handleInputChange(row.id, 'workingTemperature', e.target.value)}
-                  placeholder="Enter working temperature"
-                />
-              </td>
-              {/* Reference Temperature */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.referenceTemperature}
-                  onChange={(e) => handleInputChange(row.id, 'referenceTemperature', e.target.value)}
-                  placeholder="Enter reference temperature"
-                />
-              </td>
-              {/* Lower Shear Modulus */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.lowerShearModulus}
-                  onChange={(e) => handleInputChange(row.id, 'lowerShearModulus', e.target.value)}
-                  placeholder="Enter lower shear modulus"
-                />
-              </td>
-              {/* Upper Shear Modulus */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.upperShearModulus}
-                  onChange={(e) => handleInputChange(row.id, 'upperShearModulus', e.target.value)}
-                  placeholder="Enter upper shear modulus"
-                />
-              </td>
-              {/* Fractional Derivative Parameter */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.fractionalDerivativeParameter}
-                  onChange={(e) => handleInputChange(row.id, 'fractionalDerivativeParameter', e.target.value)}
-                  placeholder="Enter fractional derivative parameter"
-                />
-              </td>
-              {/* Temperature Shifting Factor */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.temperatureShiftingFactor}
-                  onChange={(e) => handleInputChange(row.id, 'temperatureShiftingFactor', e.target.value)}
-                  placeholder="Enter temperature shifting factor"
-                />
-              </td>
-              {/* Teta 1 */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.teta1}
-                  onChange={(e) => handleInputChange(row.id, 'teta1', e.target.value)}
-                  placeholder="Enter Teta 1"
-                />
-              </td>
-              {/* Teta 2 */}
-              <td>
-                <Form.Control
-                  type="number"
-                  value={row.teta2}
-                  onChange={(e) => handleInputChange(row.id, 'teta2', e.target.value)}
-                  placeholder="Enter Teta 2"
-                />
-              </td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const isPlotted = plottedRows.includes(row.id);
+            return (
+              <tr key={row.id}>
+                <td>
+                  <Form.Check
+                    type="checkbox"
+                    checked={selectedRows.includes(row.id)}
+                    onChange={() => toggleRowSelection(row.id)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.workingTemperature}
+                    onChange={(e) => handleInputChange(row.id, 'workingTemperature', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.referenceTemperature}
+                    onChange={(e) => handleInputChange(row.id, 'referenceTemperature', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.lowerShearModulus}
+                    onChange={(e) => handleInputChange(row.id, 'lowerShearModulus', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.upperShearModulus}
+                    onChange={(e) => handleInputChange(row.id, 'upperShearModulus', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.fractionalDerivativeParameter}
+                    onChange={(e) => handleInputChange(row.id, 'fractionalDerivativeParameter', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.temperatureShiftingFactor}
+                    onChange={(e) => handleInputChange(row.id, 'temperatureShiftingFactor', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.teta1}
+                    onChange={(e) => handleInputChange(row.id, 'teta1', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Control
+                    type="number"
+                    value={row.teta2}
+                    onChange={(e) => handleInputChange(row.id, 'teta2', e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Button
+                    variant={isPlotted ? 'danger' : 'primary'}
+                    onClick={() => togglePlot(row.id)}
+                  >
+                    {isPlotted ? 'Remove Plot' : 'Plot'}
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </Table>
+
+      {plottedRows.length > 0 && (
+        <div className="mt-4">
+          <h5>Viscoelastic Nomogram</h5>
+          <Line data={chartData} options={{
+            scales: {
+              x: {
+                type: 'logarithmic',
+                title: { display: true, text: 'Reduced Frequency (Ω)' },
+                min: 1e-10,
+                max: 1e10,
+                ticks: {
+                  callback: formatPowerOf10,
+                  autoSkip: false,
+                },
+                afterBuildTicks: (axis) => {
+                  axis.ticks = generatePowerOf10Ticks(-10, 10).map(value => ({ value }));
+                }
+              },
+              yLeft: {
+                type: 'logarithmic',
+                position: 'left',
+                title: { display: true, text: 'Shear Modulus [Pa] / Loss Factor' },
+                min: 0.01,  // 10^-2
+                max: 1e12,  // 10^12
+                ticks: {
+                  callback: formatPowerOf10,
+                  autoSkip: false,
+                },
+                afterBuildTicks: (axis) => {
+                  axis.ticks = generatePowerOf10Ticks(-2, 12).map(value => ({ value }));
+                },
+                grid: { drawOnChartArea: true },
+              },
+              yRight: {
+                type: 'logarithmic',
+                position: 'right',
+                title: { display: true, text: 'Original Frequency [Hz]' },
+                min: 0.01,  // 10^-2
+                max: 1e12,  // 10^12
+                ticks: {
+                  callback: formatPowerOf10,
+                  autoSkip: false,
+                },
+                afterBuildTicks: (axis) => {
+                  axis.ticks = generatePowerOf10Ticks(-2, 12).map(value => ({ value }));
+                },
+                grid: { drawOnChartArea: false },
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  filter: (item) => !item.text.includes('Ref')
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  title: (context) => `Ω: ${context[0].raw.x.toExponential(2)}`,
+                  label: (ctx) => {
+                    const label = ctx.dataset.label || '';
+                    if (label.includes('Shear')) 
+                      return `${label}: ${ctx.raw.y.toExponential(2)} Pa`;
+                    if (label.includes('Loss')) 
+                      return `${label}: ${ctx.raw.y.toFixed(3)}`;
+                    return `${label}: ${ctx.raw.y.toExponential(2)} Hz`;
+                  }
+                }
+              }
+            }
+          }} />
+          <div className="text-muted small mt-2">
+            Isothermal reference lines shown for temperatures: 253K, 273K, 293K, 313K, 333K
+          </div>
+        </div>
+      )}
     </div>
   );
 };
