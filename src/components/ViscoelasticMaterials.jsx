@@ -309,7 +309,7 @@ const ViscoelasticMaterial = () => {
             scales: {
               x: {
                 type: 'logarithmic',
-                title: { display: true, text: 'Reduced Frequency (Ω)' },
+                title: { display: true, text: 'Reduced Frequency' },
                 min: 1e-10,
                 max: 1e10,
                 ticks: {
@@ -323,7 +323,7 @@ const ViscoelasticMaterial = () => {
               yLeft: {
                 type: 'logarithmic',
                 position: 'left',
-                title: { display: true, text: 'Shear Modulus [Pa] / Loss Factor' },
+                title: { display: true, text: 'Shear Modulus [MPa] / Loss Factor' },
                 min: 0.01,  // 10^-2
                 max: 1e12,  // 10^12
                 ticks: {
@@ -338,7 +338,7 @@ const ViscoelasticMaterial = () => {
               yRight: {
                 type: 'logarithmic',
                 position: 'right',
-                title: { display: true, text: 'Original Frequency [Hz]' },
+                title: { display: true, text: 'Frequency [Hz]' },
                 min: 0.01,  // 10^-2
                 max: 1e12,  // 10^12
                 ticks: {
