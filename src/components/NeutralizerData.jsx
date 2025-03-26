@@ -9,7 +9,6 @@ const NeutralizerData = () => {
 
   const generateUniqueId = () => Date.now() + Math.random();
 
-  // Function to handle adding a new neutralizer row
   const addNeutralizer = () => {
     const newRow = {
       id: generateUniqueId(),
@@ -17,8 +16,11 @@ const NeutralizerData = () => {
       modalPosition: '',
       naturalFreqLower: '',
       naturalFreqUpper: '',
+      naturalFreqDiscretization: '',
       dampingRatioLower: '',
       dampingRatioUpper: '',
+      dampingRatioDiscretization: '',
+      mass: '',
       viscoelasticMaterial: '',
       dynamicStiffness: '',
     };
@@ -39,7 +41,7 @@ const NeutralizerData = () => {
 
   const removeNeutralizers = () => {
     setRows(rows.filter(row => !selectedRows.includes(row.id)));
-    setSelectedRows([]); // Clear selection after deletion
+    setSelectedRows([]);
   };
 
   return (
@@ -59,12 +61,15 @@ const NeutralizerData = () => {
         <thead>
           <tr>
             <th>Select</th>
+            <th>Mass</th>
             <th>Neutralizer Type</th>
             <th>Modal Position</th>
             <th>Natural Frequency Lower Bound</th>
             <th>Natural Frequency Upper Bound</th>
+            <th>Natural Frequency Discretization</th>
             <th>Damping Ratio Lower Bound</th>
             <th>Damping Ratio Upper Bound</th>
+            <th>Damping Ratio Discretization</th>
             <th>Viscoelastic Material</th>
             <th>Dynamic Stiffness</th>
           </tr>
@@ -79,7 +84,14 @@ const NeutralizerData = () => {
                   onChange={() => toggleRowSelection(row.id)}
                 />
               </td>
-              {/* Neutralizer Type */}
+              <td>
+                <Form.Control
+                  type="number"
+                  value={row.mass}
+                  onChange={(e) => handleInputChange(row.id, 'mass', e.target.value)}
+                  placeholder="Mass"
+                />
+              </td>
               <td>
                 <Form.Control
                   as="select"
@@ -90,10 +102,8 @@ const NeutralizerData = () => {
                   <option value="0">Type 0</option>
                   <option value="1">Type 1</option>
                   <option value="2">Type 2</option>
-                  {/* Add more types as needed */}
                 </Form.Control>
               </td>
-              {/* Modal Position */}
               <td>
                 <Form.Control
                   type="text"
@@ -102,7 +112,6 @@ const NeutralizerData = () => {
                   placeholder="[0,1,4,7]"
                 />
               </td>
-              {/* Natural Frequency Lower Bound */}
               <td>
                 <Form.Control
                   type="number"
@@ -110,7 +119,6 @@ const NeutralizerData = () => {
                   onChange={(e) => handleInputChange(row.id, 'naturalFreqLower', e.target.value)}
                 />
               </td>
-              {/* Natural Frequency Upper Bound */}
               <td>
                 <Form.Control
                   type="number"
@@ -118,7 +126,13 @@ const NeutralizerData = () => {
                   onChange={(e) => handleInputChange(row.id, 'naturalFreqUpper', e.target.value)}
                 />
               </td>
-              {/* Damping Ratio Lower Bound - enabled only if type contains 1 */}
+              <td>
+                <Form.Control
+                  type="number"
+                  value={row.naturalFreqDiscretization}
+                  onChange={(e) => handleInputChange(row.id, 'naturalFreqDiscretization', e.target.value)}
+                />
+              </td>
               <td>
                 <Form.Control
                   type="number"
@@ -127,7 +141,6 @@ const NeutralizerData = () => {
                   disabled={!row.neutralizerType.includes('1')}
                 />
               </td>
-              {/* Damping Ratio Upper Bound - enabled only if type contains 1 */}
               <td>
                 <Form.Control
                   type="number"
@@ -136,7 +149,14 @@ const NeutralizerData = () => {
                   disabled={!row.neutralizerType.includes('1')}
                 />
               </td>
-              {/* Viscoelastic Material - array input enabled only if type contains 2 */}
+              <td>
+                <Form.Control
+                  type="number"
+                  value={row.dampingRatioDiscretization}
+                  onChange={(e) => handleInputChange(row.id, 'dampingRatioDiscretization', e.target.value)}
+                  disabled={!row.neutralizerType.includes('1')}
+                />
+              </td>
               <td>
                 <Form.Control
                   type="text"
@@ -146,7 +166,6 @@ const NeutralizerData = () => {
                   disabled={!row.neutralizerType.includes('2')}
                 />
               </td>
-              {/* Dynamic Stiffness - enabled only if type contains 0 */}
               <td>
                 <Form.Control
                   type="text"
@@ -161,10 +180,7 @@ const NeutralizerData = () => {
         </tbody>
       </Table>
 
-      {/* ViscoelasticMaterials Component */}
       <ViscoelasticMaterials />
-
-      {/* DynamicStiffness Component */}
       <DynamicStiffness />
     </div>
   );

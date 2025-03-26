@@ -7,59 +7,142 @@ import CalculationParameters from '../components/CalculationParameters';
 import Results from '../components/Results';
 
 const NeutralizerOptimization = () => {
-  const { control, handleSubmit, formState: { errors } } = useForm({
+  const methods = useForm({
     defaultValues: {
       primarySystemData: {
-        naturalFrequencies: [],
-        modalDamping: [],
-        modes: []
+        primarySystemNaturalFrequencies: [],
+        primarySystemModalDamping: [],
+        primarySystemModes: []
       },
       neutralizerData: {
-        neutralizerType: [],
-        modalPosition: [],
-        naturalFrequencyLowerBound: '',
-        naturalFrequencyUpperBound: '',
-        dampingRatioLowerBound: '',
-        dampingRatioUpperBound: '',
-        viscoelasticMaterial: [],
-        dynamicStiffness: []
+        neutralizers: [
+          {
+            mass: 0.0,
+            optimizationVariables: {
+              real: [
+                {
+                  name: "frequency",
+                  lowerBound: '',
+                  upperBound: '',
+                  discretization: ''
+                }
+              ],
+              integer: [
+                {
+                  name: "type",
+                  range: []
+                },
+                {
+                  name: "modal_position",
+                  range: []
+                },
+                {
+                  name: "viscoelastic_material",
+                  range: []
+                }
+              ]
+            }
+          }
+        ],
+        additionalParameters: {
+          viscoelasticMaterials: [
+            {
+              name: '',
+              TT1: '',
+              TT0: '',
+              GH: '',
+              GL: '',
+              beta: '',
+              FI: '',
+              teta1: '',
+              teta2: ''
+            }
+          ],
+          userDefinedDynamicStiffnesses: [
+            {
+              name: '',
+              range: []
+            }
+          ]
+        }
       },
       calculationParameters: {
-        frequencyLowerBoundOpt: '',
-        frequencyUpperBoundOpt: '',
-        frequencyDiscretizationOpt: '',
-        excitationPointOpt: '',
-        responsePointOpt: '',
-        frequencyLowerBoundPlot: '',
-        frequencyUpperBoundPlot: '',
-        frequencyDiscretizationPlot: '',
-        excitationPointPlot: '',
-        responsePointPlot: '',
-        populationSize: '',
-        generations: '',
-        crossover: '',
-        mutation: ''
-      },
-      results: {}
+        excitationNodeOptimization: '',
+        responseNodeOptimization: '',
+        excitationNodePlot: '',
+        responseNodePlot: '',
+        plotType: '',
+        objectiveFunctionSearchLowerBound: '',
+        objectiveFunctionSearchUpperBound: '',
+        objectiveFunctionSearchDiscretization: '',
+        plotLowerBound: '',
+        plotUpperBound: '',
+        plotDiscretization: '',
+        geneticAlgorithm: {
+          populationSize: '',
+          generations: '',
+          crossover: '',
+          mutation: ''
+        }
+      }
     }
   });
+
+  const { handleSubmit, setValue } = methods;
 
   const onSubmit = (data) => {
     const payload = {
       primary_system_data: data.primarySystemData,
       neutralizer_data: data.neutralizerData,
-      calculation_parameters: data.calculationParameters,
-      results: data.results
+      calculation_parameters: data.calculationParameters
     };
     console.log('Saving project with payload:', payload);
     // Add your API call logic here
   };
 
+  const openExistingProject = async () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'application/json';
+  
+    fileInput.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        try {
+          const text = await file.text();
+          const jsonData = JSON.parse(text);
+  
+          // Log the object already created in the form
+          const currentFormValues = methods.getValues();
+          console.log('Current Form Values:', currentFormValues);
+  
+          // Log the ingested object
+          console.log('Ingested Object:', jsonData);
+  
+          if (jsonData) {
+            Object.entries(jsonData).forEach(([key, value]) => {
+              setValue(key, value, { shouldValidate: true });
+            });
+  
+            // Log the updated form values after ingestion
+            console.log('Updated Form Values:', methods.getValues());
+          }
+        } catch (error) {
+          console.error('Error reading or parsing the file:', error);
+        }
+      }
+    };
+  
+    fileInput.click();
+  };
+
   return (
-    <FormProvider onSubmit={handleSubmit(onSubmit)}>
+    <FormProvider {...methods}>
       <Container>
         <div className="d-flex justify-content-between mt-4 mb-4">
-          <Button variant="primary">Open an Existing Project</Button>
+          <Button variant="primary" onClick={openExistingProject}>
+            Open an Existing Project
+          </Button>
           <Button variant="success" onClick={handleSubmit(onSubmit)}>
             Save
           </Button>
@@ -83,7 +166,7 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="2">
             <Accordion.Header>Calculation Parameters</Accordion.Header>
             <Accordion.Body>
-              <CalculationParameters control={control} errors={errors}/>
+              <CalculationParameters control={methods.control} errors={methods.formState.errors}/>
             </Accordion.Body>
           </Accordion.Item>
 
