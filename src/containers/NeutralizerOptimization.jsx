@@ -5,6 +5,7 @@ import PrimarySystemData from '../components/PrimarySystemData';
 import NeutralizerData from '../components/NeutralizerData';
 import CalculationParameters from '../components/CalculationParameters';
 import Results from '../components/Results';
+import { optimizeNeutralizer } from '../services/apiService';
 
 const NeutralizerOptimization = () => {
   const methods = useForm({
@@ -100,31 +101,34 @@ const NeutralizerOptimization = () => {
     // Add your API call logic here
   };
 
+  const onOptimize = async () => {
+    const formValues = methods.getValues();
+    const payload = {...formValues};
+    try {
+      const result = await optimizeNeutralizer(payload);
+      console.log('Optimization result:', result);
+      // Handle the result (e.g., display in Results component)
+    } catch (error) {
+      console.error('Optimization failed:', error);
+    }
+  };
+
   const openExistingProject = async () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'application/json';
-  
+
     fileInput.onchange = async (event) => {
       const file = event.target.files[0];
       if (file) {
         try {
           const text = await file.text();
           const jsonData = JSON.parse(text);
-  
-          // Log the object already created in the form
-          const currentFormValues = methods.getValues();
-          console.log('Current Form Values:', currentFormValues);
-  
-          // Log the ingested object
-          console.log('Ingested Object:', jsonData);
-  
+
           if (jsonData) {
             Object.entries(jsonData).forEach(([key, value]) => {
               setValue(key, value, { shouldValidate: true });
             });
-  
-            // Log the updated form values after ingestion
             console.log('Updated Form Values:', methods.getValues());
           }
         } catch (error) {
@@ -132,7 +136,7 @@ const NeutralizerOptimization = () => {
         }
       }
     };
-  
+
     fileInput.click();
   };
 
@@ -145,6 +149,9 @@ const NeutralizerOptimization = () => {
           </Button>
           <Button variant="success" onClick={handleSubmit(onSubmit)}>
             Save
+          </Button>
+          <Button variant="info" onClick={onOptimize}>
+            Optimize
           </Button>
         </div>
 
@@ -166,7 +173,7 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="2">
             <Accordion.Header>Calculation Parameters</Accordion.Header>
             <Accordion.Body>
-              <CalculationParameters control={methods.control} errors={methods.formState.errors}/>
+              <CalculationParameters control={methods.control} errors={methods.formState.errors} />
             </Accordion.Body>
           </Accordion.Item>
 
