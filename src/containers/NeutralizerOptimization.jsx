@@ -92,10 +92,17 @@ const NeutralizerOptimization = () => {
   const { handleSubmit, setValue } = methods;
 
   const onSubmit = (data) => {
-    const payload = {
+		for (let i = 0; i < data.primarySystemData.rows.length; i++) {
+			data.primarySystemData.primarySystemNaturalFrequencies[i] = data.primarySystemData.rows[i].naturalFrequency
+			data.primarySystemData.primarySystemModalDamping[i] = data.primarySystemData.rows[i].modalDamping 
+		}
+		delete data.primarySystemData.rows
+
+		const payload = {
       primary_system_data: data.primarySystemData,
       neutralizer_data: data.neutralizerData,
-      calculation_parameters: data.calculationParameters
+      calculation_parameters: data.calculationParameters,
+      results: data.results
     };
     console.log('Saving project with payload:', payload);
     // Add your API call logic here
@@ -159,14 +166,14 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="0">
             <Accordion.Header>Primary System Data</Accordion.Header>
             <Accordion.Body>
-              <PrimarySystemData />
+              <PrimarySystemData control={methods.control} errors={methods.errors} />
             </Accordion.Body>
           </Accordion.Item>
 
           <Accordion.Item eventKey="1">
             <Accordion.Header>Neutralizer Data</Accordion.Header>
             <Accordion.Body>
-              <NeutralizerData />
+              <NeutralizerData control={methods.control} errors={methods.errors} getValues={methods.getValues} />
             </Accordion.Body>
           </Accordion.Item>
 

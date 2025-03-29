@@ -1,71 +1,45 @@
-import React, { useState } from 'react';
+import React from 'react'
+import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 
-const PrimarySystemData = ({ formData, handleInputChange }) => {
-  const [rows, setRows] = useState([]);
+const PrimarySystemData = ({ control, errors, unregister }) => {
+	const { fields, append, remove } = useFieldArray({
+		control,
+		name: 'primarySystemData.rows'
+	})
 
-  const generateUniqueId = () => `${Date.now()}-${Math.random()}`;
+	const rows = useWatch({ control, name: 'primarySystemData.rows' })
 
-  const addRow = () => {
-    const newRow = {
-      id: generateUniqueId(),
-      naturalFrequency: '',
-      modalDamping: '',
-      mode: [],
-      selected: false,
-    };
-    const updatedRows = [...rows, newRow];
-    setRows(updatedRows);
-  };
+	const rules = {
+		required: 'This field is required',
+		pattern: {
+			value: /^\d+(\.\d+)?$/,
+      message: 'Please enter a valid number'
+		},
+	}	
+	
+	const removeSelectedRows = () => {		
+		const currentRows = (rows || [])
 
-  const handleRowChange = (id, field, value) => {
-    const updatedRows = rows.map((row) =>
-      row.id === id
-        ? {
-            ...row,
-            [field]: field === 'mode' ? tryParseArray(value) : tryParseFloat(value),
-          }
-        : row
-    );
-    setRows(updatedRows);
-  };
+		const indexesToRemove = currentRows
+      .map((row, index) => (row?.checked ? index : -1))
+      .filter(index => index !== -1)
+      .sort((a, b) => b - a);
+		
+		indexesToRemove.forEach(index => remove(index));
+	};
 
-  const tryParseFloat = (value) => {
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? '' : parsed;
-  };
-
-  const tryParseArray = (value) => {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return [];
-    }
-  };
-
-  const removeSelectedRows = () => {
-    const updatedRows = rows.filter((row) => !row.selected);
-    setRows(updatedRows);
-  };
-
-  const toggleRowSelection = (id) => {
-    const updatedRows = rows.map((row) =>
-      row.id === id ? { ...row, selected: !row.selected } : row
-    );
-    setRows(updatedRows);
-  };
-
-  return (
+	return (
     <div>
       <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={addRow}>
+        <Button variant="primary" onClick={() => append({ checked: false, naturalFrequency: '', modalDamping: '' })}>
           Add Row
         </Button>
         <Button
           variant="danger"
           onClick={removeSelectedRows}
-          disabled={!rows.some((row) => row.selected)}
-        >
+          disabled={!rows?.some((row) => row.checked)} 
+				>
           Remove Selected Rows
         </Button>
       </div>
@@ -80,49 +54,79 @@ const PrimarySystemData = ({ formData, handleInputChange }) => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {fields.map((row, index) => (
             <tr key={row.id}>
               <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={row.selected}
-                  onChange={() => toggleRowSelection(row.id)}
+								<Controller
+                  name={`primarySystemData.rows.${index}.checked`}
+                  control={control}
+                  defaultValue={false}
+                  render={({ field }) => (
+										<Form.Check
+                      {...field}
+											checked={field.value}
+                    />
+									)}
                 />
               </td>
               <td>
-                <Form.Control
-                  type="text"
-                  value={row.naturalFrequency}
-                  onChange={(e) =>
-                    handleRowChange(row.id, 'naturalFrequency', e.target.value)
-                  }
-                  placeholder="e.g. 1.0"
-                />
+								<Controller 
+									name={`primarySystemData.rows.${index}.naturalFrequency`}
+									control={control}
+									rules={rules}
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+												{...field}
+												type='text'
+												placeholder='e.g. 1.0'
+											/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
               </td>
               <td>
-                <Form.Control
-                  type="text"
-                  value={row.modalDamping}
-                  onChange={(e) =>
-                    handleRowChange(row.id, 'modalDamping', e.target.value)
-                  }
-                  placeholder="e.g. 0.05"
-                />
+								<Controller
+									name={`primarySystemData.rows.${index}.modalDamping`}
+									control={control}
+									rules={rules}
+									defaultValue=''
+									render={({ field, fieldState}) => (
+										<>
+											<Form.Control
+												{...field}
+												type='text'
+												placeholder='e.g. 0.05'
+											/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
               </td>
-              <td>
+              {<td>
                 <Form.Control
                   type="text"
                   value={JSON.stringify(row.mode)}
                   onChange={(e) => handleRowChange(row.id, 'mode', e.target.value)}
                   placeholder='e.g. [0, 1, 2]'
                 />
-              </td>
+              </td>}
             </tr>
           ))}
         </tbody>
       </Table>
     </div>
   );
-};
+}
 
 export default PrimarySystemData;

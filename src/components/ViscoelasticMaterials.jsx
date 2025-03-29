@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Controller } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
@@ -22,10 +23,44 @@ const formatPowerOf10 = (value) => {
   return `10^${Math.round(exponent)}`;
 };
 
-const ViscoelasticMaterial = () => {
+const ViscoelasticMaterial = ({ control, errors, getValues }) => {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [plottedRows, setPlottedRows] = useState([]);
+
+	const rules = {
+		required: 'This field is required',
+		pattern: {
+			value: /^\d+(\.\d+)?$/,
+			message: 'Please enter a valid number'
+		}
+	}
+
+	const getRulesLowerShearModulus = (rowId) => ({
+		...rules,
+		validate: (value) => {
+			const upper = getValues(`neutralizerData.viscoelasticMaterial.upperShearModulus[${rowId}]`)
+			
+			if (!value || !upper)
+				return true
+
+			return (parseFloat(value) < parseFloat(upper)) 
+				|| 'Value must be lower than Upper Shear Modulus'
+		}
+	})
+
+	const getRulesUpperShearModulus = (rowId) => ({
+		...rules,
+		validate: (value) => {
+			const lower = getValues(`neutralizerData.viscoelasticMaterial.lowerShearModulus[${rowId}]`)
+
+			if (!value || !lower)
+					return true
+
+			return (parseFloat(lower) < parseFloat(value)) 
+				|| 'Value must be higher than Lower Shear Modulus'
+		}
+	})
 
   const generateUniqueId = () => Date.now() + Math.random();
 
@@ -233,61 +268,181 @@ const ViscoelasticMaterial = () => {
                   />
                 </td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.workingTemperature}
-                    onChange={(e) => handleInputChange(row.id, 'workingTemperature', e.target.value)}
-                  />
-                </td>
+									<Controller
+										name={`neutralizerData.viscoelasticMaterial.workingTemperature[${row.id}]`}
+										control={control}
+										rules={rules}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													placeholder="Enter working temperature"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/>					
+              	</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.referenceTemperature[${row.id}]`}
+										control={control}
+										rules={rules}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter reference temperature"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/>
+              	</td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.referenceTemperature}
-                    onChange={(e) => handleInputChange(row.id, 'referenceTemperature', e.target.value)}
-                  />
-                </td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.lowerShearModulus[${row.id}]`}
+										control={control}
+										rules={getRulesLowerShearModulus(row.id)}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter lower shear modulus"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+											)}
+									/>
+								</td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.lowerShearModulus}
-                    onChange={(e) => handleInputChange(row.id, 'lowerShearModulus', e.target.value)}
-                  />
-                </td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.upperShearModulus[${row.id}]`}
+										control={control}
+										rules={getRulesUpperShearModulus(row.id)}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter upper shear modulus"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+											)}
+									/>
+								</td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.upperShearModulus}
-                    onChange={(e) => handleInputChange(row.id, 'upperShearModulus', e.target.value)}
-                  />
-                </td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.fractionalDerivativeParameter[${row.id}]`}
+										control={control}
+										rules={rules}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter fractional derivative parameter"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+											)}
+									/>
+								</td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.fractionalDerivativeParameter}
-                    onChange={(e) => handleInputChange(row.id, 'fractionalDerivativeParameter', e.target.value)}
-                  />
-                </td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.temperatureShiftingFactor[${row.id}]`}
+										control={control}
+										rules={rules}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter temperature shifting factor"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+											)}
+									/>
+								</td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.temperatureShiftingFactor}
-                    onChange={(e) => handleInputChange(row.id, 'temperatureShiftingFactor', e.target.value)}
-                  />
-                </td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.teta1[${row.id}]`}
+										control={control}
+										rules={rules}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter Teta 1"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+											)}
+									/>
+								</td>
                 <td>
-                  <Form.Control
-                    type="number"
-                    value={row.teta1}
-                    onChange={(e) => handleInputChange(row.id, 'teta1', e.target.value)}
-                  />
-                </td>
-                <td>
-                  <Form.Control
-                    type="number"
-                    value={row.teta2}
-                    onChange={(e) => handleInputChange(row.id, 'teta2', e.target.value)}
-                  />
-                </td>
+									<Controller 
+										name={`neutralizerData.viscoelasticMaterial.teta2[${row.id}]`}
+										control={control}
+										rules={rules}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type="text"
+													placeholder="Enter Teta 2"
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+											)}
+									/>
+								</td>
                 <td>
                   <Button
                     variant={isPlotted ? 'danger' : 'primary'}

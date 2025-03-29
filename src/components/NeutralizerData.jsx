@@ -1,11 +1,72 @@
 import React, { useState } from 'react';
+import { Controller } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
 import DynamicStiffness from './DynamicStiffness';
 
-const NeutralizerData = () => {
+const NeutralizerData = ({ control, errors, getValues}) => {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
+
+	const rules = {
+		required: 'This field is required',
+		pattern: {
+			value: /^\d+(\.\d+)?$/,
+			message: 'Please enter a valid number'
+		}
+	}
+
+	const getRulesNaturalFreqLowerBound = (rowId) => ({
+		...rules,
+		validate: (value) => {
+			const upperBound = getValues(`neutralizerData.naturalFrequencyUpperBound[${rowId}]`)
+			
+			if (!value || !upperBound)
+				return true
+	
+			return parseFloat(value) < parseFloat(upperBound)
+				|| 'Value must be lower than Natural Frequency Upper Bound`'
+		}
+	})
+
+	const getRulesNaturalFreqUpperBound = (rowId) => ({
+		...rules,
+		validate: (value) => {
+			const lowerBound = getValues(`neutralizerData.naturalFrequencyLowerBound[${rowId}]`)
+		
+			if (!value || !lowerBound)
+				return true
+
+			return (parseFloat(lowerBound) < parseFloat(value)) 
+				|| 'Value must be higher than Natural Frequency Lower Bound'
+		}
+	})
+
+	const getRulesDampingRatioLowerBound = (rowId) => ({
+		...rules,
+		validate: (value) => {
+			const upperBound = getValues(`neutralizerData.dampingRatioUpperBound[${rowId}]`) 
+
+			if (!value || !upperBound)
+					return true
+
+			return (parseFloat(value) < parseFloat(upperBound)) 
+				|| 'Value must be lower than Damping Ratio Upper Bound'
+		}
+	})
+
+	const getRulesDampingRatioUpperBound = (rowId) => ({
+		...rules,
+		validate: (value) => {
+			const lowerBound = getValues(`neutralizerData.dampingRatioLowerBound[${rowId}]`) 
+
+			if (!value || !lowerBound)
+					return true
+
+			return (parseFloat(lowerBound) < parseFloat(value)) 
+				|| 'Value must be higher than Damping Ratio Lower Bound'
+		}
+	})
 
   const generateUniqueId = () => Date.now() + Math.random();
 
@@ -113,18 +174,46 @@ const NeutralizerData = () => {
                 />
               </td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.naturalFreqLower}
-                  onChange={(e) => handleInputChange(row.id, 'naturalFreqLower', e.target.value)}
-                />
-              </td>
+								<Controller 
+									name={`neutralizerData.naturalFrequencyLowerBound[${row.id}]`} 
+									control={control}
+									rules={getRulesNaturalFreqLowerBound(row.id)}
+									defaultValue=""
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+												{...field}
+												type="text"
+											/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
+							</td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.naturalFreqUpper}
-                  onChange={(e) => handleInputChange(row.id, 'naturalFreqUpper', e.target.value)}
-                />
+								<Controller 
+									name={`neutralizerData.naturalFrequencyUpperBound[${row.id}]`} 
+									control={control}
+									rules={getRulesNaturalFreqUpperBound(row.id)}
+									defaultValue=""
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+												{...field}
+												type="text"
+											/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/> 			
               </td>
               <td>
                 <Form.Control
@@ -134,20 +223,50 @@ const NeutralizerData = () => {
                 />
               </td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.dampingRatioLower}
-                  onChange={(e) => handleInputChange(row.id, 'dampingRatioLower', e.target.value)}
-                  disabled={!row.neutralizerType.includes('1')}
-                />
+								<Controller 
+									key={row.neutralizerType.includes('1') ? 'withRules' : 'noRules'}
+									name={`neutralizerData.dampingRatioLowerBound[${row.id}]`} 
+									control={control}
+									rules={row.neutralizerType.includes('1') ? getRulesDampingRatioLowerBound(row.id) : undefined }
+									defaultValue=""
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+                  			{...field}
+                  			type='text'
+                  			disabled={!row.neutralizerType.includes('1')}
+                			/>
+											{row.neutralizerType.includes('1') && fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
               </td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.dampingRatioUpper}
-                  onChange={(e) => handleInputChange(row.id, 'dampingRatioUpper', e.target.value)}
-                  disabled={!row.neutralizerType.includes('1')}
-                />
+								<Controller
+									key={row.neutralizerType.includes('1') ? 'withRules' : 'noRules'}
+									name={`neutralizerData.dampingRatioUpperBound[${row.id}]`}
+									control={control}
+									rules={row.neutralizerType.includes('1') ? getRulesDampingRatioLowerBound(row.id) : undefined }
+									defaultValue=""
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control 
+												{...field}
+												type='text'
+												disabled={!row.neutralizerType.includes('1')}
+											/>
+											{row.neutralizerType.includes('1') && fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)} 
+								/>
               </td>
               <td>
                 <Form.Control
@@ -180,7 +299,7 @@ const NeutralizerData = () => {
         </tbody>
       </Table>
 
-      <ViscoelasticMaterials />
+      <ViscoelasticMaterials control={control} errors={errors} getValues={getValues}/>
       <DynamicStiffness />
     </div>
   );

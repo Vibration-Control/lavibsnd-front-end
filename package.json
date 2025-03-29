@@ -28,7 +28,7 @@
     "react-hook-form": "^7.54.2",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.23.1",
-    "react-scripts": "5.0.1"
+    "react-scripts": "^5.0.1"
   },
   "devDependencies": {
     "eslint": "^8.15.0",
