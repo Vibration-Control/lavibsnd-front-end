@@ -23,6 +23,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.frequencyLowerBoundOpt"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -48,6 +49,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.frequencyUpperBoundOpt"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -73,6 +75,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.frequencyDiscretizationOpt"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -100,6 +103,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.excitationPointOpt"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -125,6 +129,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.responsePointOpt"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -156,6 +161,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.frequencyLowerBoundPlot"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -181,6 +187,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.frequencyUpperBoundPlot"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -206,6 +213,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.frequencyDiscretizationPlot"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -234,6 +242,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.excitationPointPlot"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -259,6 +268,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.responsePointPlot"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -290,6 +300,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.populationSize"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -315,6 +326,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.generations"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -340,6 +352,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.crossover"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control
@@ -365,6 +378,7 @@ const CalculationParameters = ({ control, errors }) => {
               name="calculationParameters.mutation"
               control={control}
               rules={rules}
+							defaultValue=""
               render={({ field }) => (
                 <>
                   <Form.Control

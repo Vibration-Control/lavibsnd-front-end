@@ -154,6 +154,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
                 />
               </td>
               <td>
+								{console.log(row.neutralizerType)}
                 <Form.Control
                   as="select"
                   value={row.neutralizerType}
@@ -223,20 +224,16 @@ const NeutralizerData = ({ control, errors, getValues}) => {
                 />
               </td>
               <td>
+							{ row.neutralizerType.includes('1') ? (
 								<Controller 
-									key={row.neutralizerType.includes('1') ? 'withRules' : 'noRules'}
 									name={`neutralizerData.dampingRatioLowerBound[${row.id}]`} 
 									control={control}
-									rules={row.neutralizerType.includes('1') ? getRulesDampingRatioLowerBound(row.id) : undefined }
+									rules={getRulesDampingRatioLowerBound(row.id)}
 									defaultValue=""
 									render={({ field, fieldState }) => (
 										<>
-											<Form.Control
-                  			{...field}
-                  			type='text'
-                  			disabled={!row.neutralizerType.includes('1')}
-                			/>
-											{row.neutralizerType.includes('1') && fieldState.error && (
+											<Form.Control {...field} type='text' />
+											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
 												</Form.Text>
@@ -244,13 +241,17 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 										</>
 									)}
 								/>
+							) : (
+								<Form.Control type="text" value="" disabled />
+							)}
+
               </td>
               <td>
 								<Controller
 									key={row.neutralizerType.includes('1') ? 'withRules' : 'noRules'}
 									name={`neutralizerData.dampingRatioUpperBound[${row.id}]`}
 									control={control}
-									rules={row.neutralizerType.includes('1') ? getRulesDampingRatioLowerBound(row.id) : undefined }
+									rules={row.neutralizerType.includes('1') ? getRulesDampingRatioUpperBound(row.id) : undefined }
 									defaultValue=""
 									render={({ field, fieldState }) => (
 										<>
