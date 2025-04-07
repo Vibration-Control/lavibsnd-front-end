@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { Controller } from 'react-hook-form'
+import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
 import DynamicStiffness from './DynamicStiffness';
 
 const NeutralizerData = ({ control, errors, getValues}) => {
-  const [rows, setRows] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
+	const { fields, append, remove } = useFieldArray({
+		control,
+		name: 'neutralizerData.rows'
+	})
 
-	const rules = {
+	const rows = useWatch({ control, name:'neutralizerData.rows'})
+
+	const floatRules = {
 		required: 'This field is required',
 		pattern: {
 			value: /^\d+(\.\d+)?$/,
@@ -16,8 +20,16 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 		}
 	}
 
+	const intRules = {
+		required: 'This field is required',
+		pattern: {
+			value: /^[0-9]+$/,
+			message: 'Please enter a valid number'
+		}
+	}
+
 	const getRulesNaturalFreqLowerBound = (rowId) => ({
-		...rules,
+		...floatRules,
 		validate: (value) => {
 			const upperBound = getValues(`neutralizerData.naturalFrequencyUpperBound[${rowId}]`)
 			
@@ -30,7 +42,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 	})
 
 	const getRulesNaturalFreqUpperBound = (rowId) => ({
-		...rules,
+		...floatRules,
 		validate: (value) => {
 			const lowerBound = getValues(`neutralizerData.naturalFrequencyLowerBound[${rowId}]`)
 		
@@ -43,7 +55,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 	})
 
 	const getRulesDampingRatioLowerBound = (rowId) => ({
-		...rules,
+		...floatRules,
 		validate: (value) => {
 			const upperBound = getValues(`neutralizerData.dampingRatioUpperBound[${rowId}]`) 
 
@@ -56,7 +68,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 	})
 
 	const getRulesDampingRatioUpperBound = (rowId) => ({
-		...rules,
+		...floatRules,
 		validate: (value) => {
 			const lowerBound = getValues(`neutralizerData.dampingRatioLowerBound[${rowId}]`) 
 
@@ -68,50 +80,26 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 		}
 	})
 
-  const generateUniqueId = () => Date.now() + Math.random();
-
-  const addNeutralizer = () => {
-    const newRow = {
-      id: generateUniqueId(),
-      neutralizerType: [],
-      modalPosition: '',
-      naturalFreqLower: '',
-      naturalFreqUpper: '',
-      naturalFreqDiscretization: '',
-      dampingRatioLower: '',
-      dampingRatioUpper: '',
-      dampingRatioDiscretization: '',
-      mass: '',
-      viscoelasticMaterial: '',
-      dynamicStiffness: '',
-    };
-    setRows([...rows, newRow]);
-  };
-
-  const handleInputChange = (id, field, value) => {
-    setRows(rows.map(row => row.id === id ? { ...row, [field]: value } : row));
-  };
-
-  const toggleRowSelection = (id) => {
-    if (selectedRows.includes(id)) {
-      setSelectedRows(selectedRows.filter(rowId => rowId !== id));
-    } else {
-      setSelectedRows([...selectedRows, id]);
-    }
-  };
-
   const removeNeutralizers = () => {
-    setRows(rows.filter(row => !selectedRows.includes(row.id)));
-    setSelectedRows([]);
-  };
+		const currentRows = (rows || [])
+
+		const indexesToRemove = currentRows
+			.map((row, index) => (row?.checked ? index : -1))
+			.filter(index => index !== -1)
+			.sort((a,b) => b - a);
+
+		indexesToRemove.forEach(index => remove(index))
+	};
 
   return (
     <div>
       <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={addNeutralizer}>Add Neutralizer</Button>
+        <Button variant="primary" onClick={() => append({ checked:false, mass:'', type:[], natFreqLower:'', natFreqUpper:'', natFreqDisc:'', dampingRatioLower:'', dampingRatioUpper:'', dampingRatioDisc:'',viscoMaterial:'', dynamicStiff:''})}>
+					Add Neutralizer
+				</Button>
         <Button
           variant="danger"
-          disabled={selectedRows.length === 0}
+          disabled={!rows?.some((row) => row.checked)}
           onClick={removeNeutralizers}
         >
           Remove Neutralizers
@@ -136,50 +124,83 @@ const NeutralizerData = ({ control, errors, getValues}) => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {fields.map((row, index) => (
             <tr key={row.id}>
               <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={selectedRows.includes(row.id)}
-                  onChange={() => toggleRowSelection(row.id)}
-                />
+								<Controller
+									name={`neutralizerData.rows.${index}.checked`}
+									control={control}
+									defaultValue={false}
+									render={({ field }) => (
+										<Form.Check
+                  		{...field}
+											checked={field.value}
+                		/>
+									)}
+								/>
               </td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.mass}
-                  onChange={(e) => handleInputChange(row.id, 'mass', e.target.value)}
-                  placeholder="Mass"
-                />
+								<Controller
+									name={`neutralizerData.rows.${index}.mass`}
+									control={control}
+									rules={floatRules}
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+                  			{...field}
+												type='text'
+                  			placeholder="Mass"
+                			/>
+											{fieldState.error && (
+												<Form.Text className='text-danger'>
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
               </td>
               <td>
-								{console.log(row.neutralizerType)}
-                <Form.Control
-                  as="select"
-                  value={row.neutralizerType}
-                  onChange={(e) => handleInputChange(row.id, 'neutralizerType', [...e.target.selectedOptions].map(o => o.value))}
-                  multiple
-                >
-                  <option value="0">Type 0</option>
-                  <option value="1">Type 1</option>
-                  <option value="2">Type 2</option>
-                </Form.Control>
+								<Controller
+									name={`neutralizerData.rows.${index}.type`}
+									control={control}
+									defaultValue={[]} 
+									render={({ field }) => (
+										<Form.Control
+											as="select"
+											multiple
+											value={field.value}
+											onChange={(e) => {
+												const selectedValues = Array.from(
+													e.target.selectedOptions,
+													option => option.value
+												);
+												field.onChange(selectedValues);
+											}} 
+										>
+											<option value="0">Type 0</option>
+											<option value="1">Type 1</option>
+											<option value="2">Type 2</option>
+										</Form.Control>
+									)}
+								/>
+								{console.log(rows)}
               </td>
               <td>
                 <Form.Control
                   type="text"
                   value={row.modalPosition}
-                  onChange={(e) => handleInputChange(row.id, 'modalPosition', e.target.value)}
+                  //onChange={(e) => handleInputChange(row.id, 'modalPosition', e.target.value)}
                   placeholder="[0,1,4,7]"
                 />
               </td>
               <td>
 								<Controller 
-									name={`neutralizerData.naturalFrequencyLowerBound[${row.id}]`} 
+									name={`neutralizerData.rows.${index}.natFreqLower`} 
 									control={control}
 									rules={getRulesNaturalFreqLowerBound(row.id)}
-									defaultValue=""
+									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
 											<Form.Control
@@ -197,10 +218,10 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 							</td>
               <td>
 								<Controller 
-									name={`neutralizerData.naturalFrequencyUpperBound[${row.id}]`} 
+									name={`neutralizerData.rows.${index}.natFreqUpper`} 
 									control={control}
 									rules={getRulesNaturalFreqUpperBound(row.id)}
-									defaultValue=""
+									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
 											<Form.Control
@@ -217,50 +238,62 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								/> 			
               </td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.naturalFreqDiscretization}
-                  onChange={(e) => handleInputChange(row.id, 'naturalFreqDiscretization', e.target.value)}
-                />
-              </td>
-              <td>
-							{ row.neutralizerType.includes('1') ? (
 								<Controller 
-									name={`neutralizerData.dampingRatioLowerBound[${row.id}]`} 
+									name={`neutralizerData.rows.${index}.natFreqDisc`}
 									control={control}
-									rules={getRulesDampingRatioLowerBound(row.id)}
-									defaultValue=""
+									rules={intRules}
+									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
-											<Form.Control {...field} type='text' />
+											<Form.Control
+                  			{...field}
+												type="text"
+                			/>
 											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
 												</Form.Text>
 											)}
-										</>
+										</>	
 									)}
 								/>
-							) : (
-								<Form.Control type="text" value="" disabled />
-							)}
-
+              </td>
+              <td>
+								<Controller 
+									name={`neutralizerData.rows.${index}.dampingRatioLower`}
+									control={control}
+									rules={rows?.[index]?.type.includes('1') ? getRulesDampingRatioLowerBound(row.id) : undefined}
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control 
+												{...field} 
+												type='text'
+												disabled={!rows?.[index]?.type.includes('1')}
+											/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>										
+									)}
+								/>
               </td>
               <td>
 								<Controller
-									key={row.neutralizerType.includes('1') ? 'withRules' : 'noRules'}
-									name={`neutralizerData.dampingRatioUpperBound[${row.id}]`}
+									name={`neutralizerData.rows.${index}.dampingRatioUpper`}
 									control={control}
-									rules={row.neutralizerType.includes('1') ? getRulesDampingRatioUpperBound(row.id) : undefined }
-									defaultValue=""
+									rules={rows?.[index]?.type.includes('1') ? getRulesDampingRatioUpperBound(row.id) : undefined}
+									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
 											<Form.Control 
 												{...field}
 												type='text'
-												disabled={!row.neutralizerType.includes('1')}
+												disabled={!rows?.[index]?.type.includes('1')}
 											/>
-											{row.neutralizerType.includes('1') && fieldState.error && (
+											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
 												</Form.Text>
@@ -270,20 +303,34 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								/>
               </td>
               <td>
-                <Form.Control
-                  type="number"
-                  value={row.dampingRatioDiscretization}
-                  onChange={(e) => handleInputChange(row.id, 'dampingRatioDiscretization', e.target.value)}
-                  disabled={!row.neutralizerType.includes('1')}
-                />
+								<Controller 
+									name={`neutralizerData.rows.${index}.dampingRatioDisc`}
+									control={control}
+									rules={intRules}
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+												{...field}
+												type="text"
+												disabled={!rows?.[index]?.type.includes('1')}
+											/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
               </td>
               <td>
                 <Form.Control
                   type="text"
                   value={row.viscoelasticMaterial}
-                  onChange={(e) => handleInputChange(row.id, 'viscoelasticMaterial', e.target.value)}
+                  //onChange={(e) => handleInputChange(row.id, 'viscoelasticMaterial', e.target.value)}
                   placeholder="[Material1, Material2]"
-                  disabled={!row.neutralizerType.includes('2')}
+                  disabled={!rows?.[index]?.type.includes('2')}
                 />
               </td>
               <td>
@@ -291,8 +338,8 @@ const NeutralizerData = ({ control, errors, getValues}) => {
                   type="text"
                   value={row.dynamicStiffness}
                   onChange={(e) => handleInputChange(row.id, 'dynamicStiffness', e.target.value)}
-                  placeholder="[Stiffness1, Stiffness2]"
-                  disabled={!row.neutralizerType.includes('0')}
+                  //placeholder="[Stiffness1, Stiffness2]"
+                  disabled={!(rows?.[index]?.type.includes('0'))}
                 />
               </td>
             </tr>

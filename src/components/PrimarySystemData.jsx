@@ -8,7 +8,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 		name: 'primarySystemData.rows'
 	})
 
-	const rows = useWatch({ control, name: 'primarySystemData.rows' })
+	const rows = useWatch({ control, name:'primarySystemData.rows' })
 
 	const rules = {
 		required: 'This field is required',
