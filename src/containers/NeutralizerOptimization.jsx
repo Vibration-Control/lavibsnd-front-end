@@ -10,103 +10,95 @@ import { optimizeNeutralizer } from '../services/apiService';
 const NeutralizerOptimization = () => {
   const methods = useForm({
     defaultValues: {
-      primarySystemData: {
-        primarySystemNaturalFrequencies: [],
-        primarySystemModalDamping: [],
-        primarySystemModes: []
-      },
-      neutralizerData: {
-        neutralizers: [
+      primarySystemNaturalFrequencies: [],
+      primarySystemModalDamping: [],
+      primarySystemModes: [],
+      neutralizers: [
+        {
+          mass: 0.0,
+          optimizationVariables: {
+            real: [
+              {
+                name: "frequency",
+                lowerBound: '',
+                upperBound: '',
+                discretization: ''
+              }
+            ],
+            integer: [
+              {
+                name: "type",
+                range: []
+              },
+              {
+                name: "modal_position",
+                range: []
+              },
+              {
+                name: "viscoelastic_material",
+                range: []
+              }
+            ]
+          }
+        }
+      ],
+      additionalParameters: {
+        viscoelasticMaterials: [
           {
-            mass: 0.0,
-            optimizationVariables: {
-              real: [
-                {
-                  name: "frequency",
-                  lowerBound: '',
-                  upperBound: '',
-                  discretization: ''
-                }
-              ],
-              integer: [
-                {
-                  name: "type",
-                  range: []
-                },
-                {
-                  name: "modal_position",
-                  range: []
-                },
-                {
-                  name: "viscoelastic_material",
-                  range: []
-                }
-              ]
-            }
+            name: '',
+            TT1: '',
+            TT0: '',
+            GH: '',
+            GL: '',
+            beta: '',
+            FI: '',
+            teta1: '',
+            teta2: ''
           }
         ],
-        additionalParameters: {
-          viscoelasticMaterials: [
-            {
-              name: '',
-              TT1: '',
-              TT0: '',
-              GH: '',
-              GL: '',
-              beta: '',
-              FI: '',
-              teta1: '',
-              teta2: ''
-            }
-          ],
-          userDefinedDynamicStiffnesses: [
-            {
-              name: '',
-              range: []
-            }
-          ]
-        }
+        userDefinedDynamicStiffnesses: [
+          {
+            name: '',
+            range: []
+          }
+        ]
       },
-      calculationParameters: {
-        excitationNodeOptimization: '',
-        responseNodeOptimization: '',
-        excitationNodePlot: '',
-        responseNodePlot: '',
-        plotType: '',
-        objectiveFunctionSearchLowerBound: '',
-        objectiveFunctionSearchUpperBound: '',
-        objectiveFunctionSearchDiscretization: '',
-        plotLowerBound: '',
-        plotUpperBound: '',
-        plotDiscretization: '',
-        geneticAlgorithm: {
-          populationSize: '',
-          generations: '',
-          crossover: '',
-          mutation: ''
-        }
+      excitationNodeOptimization: '',
+      responseNodeOptimization: '',
+      excitationNodePlot: '',
+      responseNodePlot: '',
+      plotType: '',
+      objectiveFunctionSearchLowerBound: '',
+      objectiveFunctionSearchUpperBound: '',
+      objectiveFunctionSearchDiscretization: '',
+      plotLowerBound: '',
+      plotUpperBound: '',
+      plotDiscretization: '',
+      geneticAlgorithm: {
+        populationSize: '',
+        generations: '',
+        crossover: '',
+        mutation: ''
       }
     }
   });
 
   const { handleSubmit, setValue } = methods;
-
+  console.log('Updated Form Values:', methods.getValues());
   const onSubmit = (data) => {
-		for (let i = 0; i < data.primarySystemData.rows.length; i++) {
-			data.primarySystemData.primarySystemNaturalFrequencies[i] = data.primarySystemData.rows[i].naturalFrequency
-			data.primarySystemData.primarySystemModalDamping[i] = data.primarySystemData.rows[i].modalDamping 
-		}
-		delete data.primarySystemData.rows
+    for (let i = 0; i < data.primarySystemModes.length; i++) {
+        data.primarySystemNaturalFrequencies[i] = data.primarySystemModes[i].naturalFrequency;
+        data.primarySystemModalDamping[i] = data.primarySystemModes[i].modalDamping;
+    }
+    delete data.primarySystemModes; 
 
-		const payload = {
-      primary_system_data: data.primarySystemData,
-      neutralizer_data: data.neutralizerData,
-      calculation_parameters: data.calculationParameters,
-      results: data.results
+    const payload = {
+        ...data
     };
+
     console.log('Saving project with payload:', payload);
     // Add your API call logic here
-  };
+};
 
   const onOptimize = async () => {
     const formValues = methods.getValues();

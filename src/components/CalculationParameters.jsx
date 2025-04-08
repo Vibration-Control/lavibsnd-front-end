@@ -1,40 +1,34 @@
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Form, Row, Col, Button } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 
 const CalculationParameters = ({ control, errors }) => {
-
   const rules = {
     required: 'This field is required',
     pattern: {
       value: /^\d+(\.\d+)?$/,
       message: 'Please enter a valid number'
     }
-  }
+  };
 
   return (
     <Form>
       <h5>Optimization</h5>
       <Row className="mb-3">
         <Col>
-          <Form.Group controlId="frequencyLowerBoundOpt">
+          <Form.Group controlId="objectiveFunctionSearchLowerBound">
             <Form.Label>Frequency Lower Bound</Form.Label>
             <Controller
-              name="calculationParameters.frequencyLowerBoundOpt"
+              name="objectiveFunctionSearchLowerBound"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 10.5"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.frequencyLowerBoundOpt && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 10.5" className="rounded" />
+                  {errors.objectiveFunctionSearchLowerBound && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.frequencyLowerBoundOpt.message}
+                      {errors.objectiveFunctionSearchLowerBound.message}
                     </Form.Text>
                   )}
                 </>
@@ -43,24 +37,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="frequencyUpperBoundOpt">
+          <Form.Group controlId="objectiveFunctionSearchUpperBound">
             <Form.Label>Frequency Upper Bound</Form.Label>
             <Controller
-              name="calculationParameters.frequencyUpperBoundOpt"
+              name="objectiveFunctionSearchUpperBound"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 50.0"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.frequencyUpperBoundOpt && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 50.0" className="rounded" />
+                  {errors.objectiveFunctionSearchUpperBound && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.frequencyUpperBoundOpt.message}
+                      {errors.objectiveFunctionSearchUpperBound.message}
                     </Form.Text>
                   )}
                 </>
@@ -69,24 +58,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="frequencyDiscretizationOpt">
-            <Form.Label>Frequency Discretization</Form.Label>
+          <Form.Group controlId="objectiveFunctionSearchDiscretization">
+            <Form.Label>Discretization</Form.Label>
             <Controller
-              name="calculationParameters.frequencyDiscretizationOpt"
+              name="objectiveFunctionSearchDiscretization"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 5"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.frequencyDiscretizationOpt && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 5" className="rounded" />
+                  {errors.objectiveFunctionSearchDiscretization && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.frequencyDiscretizationOpt.message}
+                      {errors.objectiveFunctionSearchDiscretization.message}
                     </Form.Text>
                   )}
                 </>
@@ -95,26 +79,22 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
       </Row>
+
       <Row className="mb-3">
         <Col>
-          <Form.Group controlId="excitationPointOpt">
+          <Form.Group controlId="excitationNodeOptimization">
             <Form.Label>Excitation Point</Form.Label>
             <Controller
-              name="calculationParameters.excitationPointOpt"
+              name="excitationNodeOptimization"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 3"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.excitationPointOpt && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 3" className="rounded" />
+                  {errors.excitationNodeOptimization && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.excitationPointOpt.message}
+                      {errors.excitationNodeOptimization.message}
                     </Form.Text>
                   )}
                 </>
@@ -123,24 +103,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="responsePointOpt">
+          <Form.Group controlId="responseNodeOptimization">
             <Form.Label>Response Point</Form.Label>
             <Controller
-              name="calculationParameters.responsePointOpt"
+              name="responseNodeOptimization"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 2"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.responsePointOpt && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 2" className="rounded" />
+                  {errors.responseNodeOptimization && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.responsePointOpt.message}
+                      {errors.responseNodeOptimization.message}
                     </Form.Text>
                   )}
                 </>
@@ -155,24 +130,19 @@ const CalculationParameters = ({ control, errors }) => {
       <h5>Plot</h5>
       <Row className="mb-3">
         <Col>
-          <Form.Group controlId="frequencyLowerBoundPlot">
+          <Form.Group controlId="plotLowerBound">
             <Form.Label>Frequency Lower Bound</Form.Label>
             <Controller
-              name="calculationParameters.frequencyLowerBoundPlot"
+              name="plotLowerBound"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 10.5"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.frequencyLowerBoundPlot && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 10.5" className="rounded" />
+                  {errors.plotLowerBound && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.frequencyLowerBoundPlot.message}
+                      {errors.plotLowerBound.message}
                     </Form.Text>
                   )}
                 </>
@@ -181,24 +151,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="frequencyUpperBoundPlot">
+          <Form.Group controlId="plotUpperBound">
             <Form.Label>Frequency Upper Bound</Form.Label>
             <Controller
-              name="calculationParameters.frequencyUpperBoundPlot"
+              name="plotUpperBound"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 50.0"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.frequencyUpperBoundPlot && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 50.0" className="rounded" />
+                  {errors.plotUpperBound && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.frequencyUpperBoundPlot.message}
+                      {errors.plotUpperBound.message}
                     </Form.Text>
                   )}
                 </>
@@ -207,24 +172,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="frequencyDiscretizationPlot">
-            <Form.Label>Frequency Discretization</Form.Label>
+          <Form.Group controlId="plotDiscretization">
+            <Form.Label>Discretization</Form.Label>
             <Controller
-              name="calculationParameters.frequencyDiscretizationPlot"
+              name="plotDiscretization"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 5"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.frequencyDiscretizationPlot && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 5" className="rounded" />
+                  {errors.plotDiscretization && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.frequencyDiscretizationPlot.message}
+                      {errors.plotDiscretization.message}
                     </Form.Text>
                   )}
                 </>
@@ -236,24 +196,19 @@ const CalculationParameters = ({ control, errors }) => {
 
       <Row className="mb-3">
         <Col>
-          <Form.Group controlId="excitationPointPlot">
+          <Form.Group controlId="excitationNodePlot">
             <Form.Label>Excitation Point</Form.Label>
             <Controller
-              name="calculationParameters.excitationPointPlot"
+              name="excitationNodePlot"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 3"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.excitationPointPlot && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 3" className="rounded" />
+                  {errors.excitationNodePlot && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.excitationPointPlot.message}
+                      {errors.excitationNodePlot.message}
                     </Form.Text>
                   )}
                 </>
@@ -262,24 +217,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="responsePointPlot">
+          <Form.Group controlId="responseNodePlot">
             <Form.Label>Response Point</Form.Label>
             <Controller
-              name="calculationParameters.responsePointPlot"
+              name="responseNodePlot"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 2"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.responsePointPlot && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 2" className="rounded" />
+                  {errors.responseNodePlot && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.responsePointPlot.message}
+                      {errors.responseNodePlot.message}
                     </Form.Text>
                   )}
                 </>
@@ -294,24 +244,19 @@ const CalculationParameters = ({ control, errors }) => {
       <h5>Genetic Algorithm</h5>
       <Row className="mb-3">
         <Col>
-          <Form.Group controlId="populationSize">
+          <Form.Group controlId="geneticAlgorithm.populationSize">
             <Form.Label>Population Size</Form.Label>
             <Controller
-              name="calculationParameters.populationSize"
+              name="geneticAlgorithm.populationSize"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 100"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.populationSize && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 100" className="rounded" />
+                  {errors.geneticAlgorithm?.populationSize && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.populationSize.message}
+                      {errors.geneticAlgorithm.populationSize.message}
                     </Form.Text>
                   )}
                 </>
@@ -320,24 +265,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="generations">
+          <Form.Group controlId="geneticAlgorithm.generations">
             <Form.Label>Generations</Form.Label>
             <Controller
-              name="calculationParameters.generations"
+              name="geneticAlgorithm.generations"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 50"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.generations && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 50" className="rounded" />
+                  {errors.geneticAlgorithm?.generations && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.generations.message}
+                      {errors.geneticAlgorithm.generations.message}
                     </Form.Text>
                   )}
                 </>
@@ -346,24 +286,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="crossover">
+          <Form.Group controlId="geneticAlgorithm.crossover">
             <Form.Label>Crossover</Form.Label>
             <Controller
-              name="calculationParameters.crossover"
+              name="geneticAlgorithm.crossover"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="text"
-                    placeholder="e.g., 20"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.crossover && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 20" className="rounded" />
+                  {errors.geneticAlgorithm?.crossover && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.crossover.message}
+                      {errors.geneticAlgorithm.crossover.message}
                     </Form.Text>
                   )}
                 </>
@@ -372,24 +307,19 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Group controlId="mutation">
+          <Form.Group controlId="geneticAlgorithm.mutation">
             <Form.Label>Mutation</Form.Label>
             <Controller
-              name="calculationParameters.mutation"
+              name="geneticAlgorithm.mutation"
               control={control}
               rules={rules}
-							defaultValue=""
+              defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control
-                    {...field}
-                    type="number"
-                    placeholder="e.g., 5"
-                    className="rounded"
-                  />
-                  {errors.calculationParameters?.mutation && (
+                  <Form.Control {...field} type="text" placeholder="e.g., 5" className="rounded" />
+                  {errors.geneticAlgorithm?.mutation && (
                     <Form.Text className="text-danger">
-                      {errors.calculationParameters.mutation.message}
+                      {errors.geneticAlgorithm.mutation.message}
                     </Form.Text>
                   )}
                 </>
