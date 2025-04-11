@@ -173,7 +173,7 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="1">
             <Accordion.Header>Neutralizer Data</Accordion.Header>
             <Accordion.Body>
-              <NeutralizerData control={methods.control} errors={methods.errors} getValues={methods.getValues} />
+              <NeutralizerData control={methods.control} errors={methods.errors} getValues={methods.getValues} setValue={methods.setValue} clearErrors={methods.clearErrors} />
             </Accordion.Body>
           </Accordion.Item>
 

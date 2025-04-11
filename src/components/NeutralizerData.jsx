@@ -4,7 +4,7 @@ import { Table, Button, Form } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
 import DynamicStiffness from './DynamicStiffness';
 
-const NeutralizerData = ({ control, errors, getValues}) => {
+const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) => {
 	const { fields, append, remove } = useFieldArray({
 		control,
 		name: 'neutralizerData.rows'
@@ -28,23 +28,23 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 		}
 	}
 
-	const getRulesNaturalFreqLowerBound = (rowId) => ({
+	const getRulesNaturalFreqLowerBound = (rowIndex) => ({
 		...floatRules,
 		validate: (value) => {
-			const upperBound = getValues(`neutralizerData.naturalFrequencyUpperBound[${rowId}]`)
-			
+			const upperBound = rows[rowIndex].natFreqUpper
+		
 			if (!value || !upperBound)
 				return true
 	
-			return parseFloat(value) < parseFloat(upperBound)
-				|| 'Value must be lower than Natural Frequency Upper Bound`'
+			return (parseFloat(upperBound) < parseFloat(value)) 
+				|| 'Value must be higher than Natural Frequency Lower Bound'
 		}
 	})
 
-	const getRulesNaturalFreqUpperBound = (rowId) => ({
+	const getRulesNaturalFreqUpperBound = (rowIndex) => ({
 		...floatRules,
 		validate: (value) => {
-			const lowerBound = getValues(`neutralizerData.naturalFrequencyLowerBound[${rowId}]`)
+			const lowerBound = rows[rowIndex].natFreqLower
 		
 			if (!value || !lowerBound)
 				return true
@@ -54,31 +54,66 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 		}
 	})
 
-	const getRulesDampingRatioLowerBound = (rowId) => ({
-		...floatRules,
-		validate: (value) => {
-			const upperBound = getValues(`neutralizerData.dampingRatioUpperBound[${rowId}]`) 
-
-			if (!value || !upperBound)
-					return true
-
-			return (parseFloat(value) < parseFloat(upperBound)) 
-				|| 'Value must be lower than Damping Ratio Upper Bound'
+	const getRulesDampingRatioLower = (rowIndex) => {
+		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1');
+		
+		if (!typeIncludes1) {
+			return {
+				required: false
+			}; 
 		}
-	})
+	
+		return {
+			...floatRules,
+			validate: (value) => {
+				const upperBound = rows[rowIndex].dampingRatioUpper;
 
-	const getRulesDampingRatioUpperBound = (rowId) => ({
-		...floatRules,
-		validate: (value) => {
-			const lowerBound = getValues(`neutralizerData.dampingRatioLowerBound[${rowId}]`) 
+				if (!value || !upperBound)
+					 return true;
 
-			if (!value || !lowerBound)
-					return true
+				return parseFloat(value) < parseFloat(upperBound) 
+					|| 'Value must be lower than Damping Ratio Upper Bound';
+			}
+		};
+	};
 
-			return (parseFloat(lowerBound) < parseFloat(value)) 
-				|| 'Value must be higher than Damping Ratio Lower Bound'
+	const getRulesDampingRatioUpper = (rowIndex) => {
+		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1');
+
+		if (!typeIncludes1) {
+			return {
+				required: false
+			}; 
 		}
-	})
+
+	
+		return {
+			...floatRules,
+			validate: (value) => {
+				const lowerBound = rows[rowIndex].dampingRatioLower;
+
+				if (!value || !lowerBound) 
+					return true;
+
+				return parseFloat(value) > parseFloat(lowerBound) 
+					|| 'Value must be lower than Damping Ratio Upper Bound';
+			}
+		};
+	};
+
+	const getRulesDampingRatioDiscretization = (rowIndex) => {
+		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1');
+
+		if (!typeIncludes1) {
+			return {
+				required: false
+			};
+		}
+
+		return { 
+			...intRules
+		}
+	}	
 
   const removeNeutralizers = () => {
 		const currentRows = (rows || [])
@@ -90,6 +125,45 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 
 		indexesToRemove.forEach(index => remove(index))
 	};
+
+	const handleTypeChange = (e, fieldOnChange, rowIndex) => {
+		const selectedValues = Array.from(
+			e.target.selectedOptions,
+			option => option.value
+		);
+
+		fieldOnChange(selectedValues)
+
+		if (!selectedValues.includes('0')) {
+			setValue(`neutralizerData.rows.${rowIndex}.dynamicStiffness`, '')
+
+			clearErrors([
+				`neutralizerData.rows.${rowIndex}.dynamicStiffness`
+			])
+		}
+
+		if (!selectedValues.includes('1')) {
+			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioLower`, '');
+			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioUpper`, '');
+			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioDisc`, '');	
+		
+	
+			clearErrors([
+				`neutralizerData.rows.${rowIndex}.dampingRatioLower`,
+				`neutralizerData.rows.${rowIndex}.dampingRatioUpper`,
+				`neutralizerData.rows.${rowIndex}.dampingRatioDisc`
+			]);
+		}
+
+		if (!selectedValues.includes('2')) {
+			setValue(`neutralizerData.rows.${rowIndex}.viscoelasticMaterial`, '');
+
+			clearErrors([
+				`neutralizerData.rows.${rowIndex}.viscoelasticMaterial`
+			])
+		}		
+	}
+
 
   return (
     <div>
@@ -165,19 +239,20 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								<Controller
 									name={`neutralizerData.rows.${index}.type`}
 									control={control}
-									defaultValue={[]} 
+									defaultValue={[0]} 
 									render={({ field }) => (
 										<Form.Control
 											as="select"
 											multiple
 											value={field.value}
-											onChange={(e) => {
+											/* onChange={(e) => {
 												const selectedValues = Array.from(
 													e.target.selectedOptions,
 													option => option.value
 												);
 												field.onChange(selectedValues);
-											}} 
+											}} */ 
+											 onChange={(e) => handleTypeChange(e, field.onChange, index)}
 										>
 											<option value="0">Type 0</option>
 											<option value="1">Type 1</option>
@@ -185,7 +260,6 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 										</Form.Control>
 									)}
 								/>
-								{console.log(rows)}
               </td>
               <td>
                 <Form.Control
@@ -199,7 +273,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								<Controller 
 									name={`neutralizerData.rows.${index}.natFreqLower`} 
 									control={control}
-									rules={getRulesNaturalFreqLowerBound(row.id)}
+									rules={getRulesNaturalFreqLowerBound(index)}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
@@ -220,7 +294,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								<Controller 
 									name={`neutralizerData.rows.${index}.natFreqUpper`} 
 									control={control}
-									rules={getRulesNaturalFreqUpperBound(row.id)}
+									rules={getRulesNaturalFreqUpperBound(index)}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
@@ -262,7 +336,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								<Controller 
 									name={`neutralizerData.rows.${index}.dampingRatioLower`}
 									control={control}
-									rules={rows?.[index]?.type.includes('1') ? getRulesDampingRatioLowerBound(row.id) : undefined}
+									rules={getRulesDampingRatioLower(index)}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
@@ -284,7 +358,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								<Controller
 									name={`neutralizerData.rows.${index}.dampingRatioUpper`}
 									control={control}
-									rules={rows?.[index]?.type.includes('1') ? getRulesDampingRatioUpperBound(row.id) : undefined}
+									rules={getRulesDampingRatioUpper(index)}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
@@ -306,7 +380,7 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								<Controller 
 									name={`neutralizerData.rows.${index}.dampingRatioDisc`}
 									control={control}
-									rules={intRules}
+									rules={getRulesDampingRatioDiscretization(index)}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
@@ -325,22 +399,51 @@ const NeutralizerData = ({ control, errors, getValues}) => {
 								/>
               </td>
               <td>
-                <Form.Control
-                  type="text"
-                  value={row.viscoelasticMaterial}
-                  //onChange={(e) => handleInputChange(row.id, 'viscoelasticMaterial', e.target.value)}
-                  placeholder="[Material1, Material2]"
-                  disabled={!rows?.[index]?.type.includes('2')}
-                />
+								<Controller 
+									name={`neutralizerData.rows.${index}.viscoelasticMaterial`}
+									control={control}
+									rules={ { required: 'This field is required' } }
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+                			<Form.Control
+												{...field}
+                  			type="text"
+                        placeholder="[Material1, Material2]"
+                  			disabled={!rows?.[index]?.type.includes('2')}
+                			/>		
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}						
+										</>
+									)}
+								/>
               </td>
               <td>
-                <Form.Control
-                  type="text"
-                  value={row.dynamicStiffness}
-                  onChange={(e) => handleInputChange(row.id, 'dynamicStiffness', e.target.value)}
-                  //placeholder="[Stiffness1, Stiffness2]"
-                  disabled={!(rows?.[index]?.type.includes('0'))}
-                />
+								<Controller 
+									name={`neutralizerData.rows.${index}.dynamicStiffness`}
+									control={control}
+									rules={ {required: 'This field is required. '} }
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+												{...field}
+                  			type="text"
+                  			placeholder="[Stiffness1, Stiffness2]"
+                  			disabled={!(rows?.[index]?.type.includes('0'))}
+                			/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}	
+										</>
+									)}
+								/>
+                
               </td>
             </tr>
           ))}

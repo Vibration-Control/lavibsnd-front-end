@@ -97,7 +97,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 									control={control}
 									rules={rules}
 									defaultValue=''
-									render={({ field, fieldState}) => (
+									render={({ field, fieldState }) => (
 										<>
 											<Form.Control
 												{...field}
