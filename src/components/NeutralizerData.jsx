@@ -55,7 +55,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	})
 
 	const getRulesDampingRatioLower = (rowIndex) => {
-		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1');
+		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1')
 		
 		if (!typeIncludes1) {
 			return {
@@ -78,7 +78,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	};
 
 	const getRulesDampingRatioUpper = (rowIndex) => {
-		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1');
+		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1')
 
 		if (!typeIncludes1) {
 			return {
@@ -102,7 +102,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	};
 
 	const getRulesDampingRatioDiscretization = (rowIndex) => {
-		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1');
+		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1')
 
 		if (!typeIncludes1) {
 			return {
@@ -115,7 +115,35 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 	}	
 
-  const removeNeutralizers = () => {
+	const getRulesViscoelasticMaterial = (rowIndex) => {
+		const typeIncludes2 = rows?.[rowIndex]?.type?.includes('2')
+
+		if (!typeIncludes2) {
+			return {
+				required: false
+			};
+		}
+
+		return {
+			required: 'This field is required.'
+		}
+	}
+
+	const getRulesDynamicStiffness = (rowIndex) => {
+		const typeIncludes0 = rows?.[rowIndex]?.type?.includes('0')
+
+		if (!typeIncludes0) {
+			return {
+				required: false
+			};
+		}
+
+		return {
+			required: 'This field is required.'
+		}
+	}
+
+	const removeNeutralizers = () => {
 		const currentRows = (rows || [])
 
 		const indexesToRemove = currentRows
@@ -165,55 +193,55 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	}
 
 
-  return (
-    <div>
-      <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={() => append({ checked:false, mass:'', type:[], natFreqLower:'', natFreqUpper:'', natFreqDisc:'', dampingRatioLower:'', dampingRatioUpper:'', dampingRatioDisc:'',viscoMaterial:'', dynamicStiff:''})}>
+	return (
+		<div>
+			<div className="d-flex justify-content-between mb-3">
+				<Button variant="primary" onClick={() => append({ checked:false, mass:'', type:[], natFreqLower:'', natFreqUpper:'', natFreqDisc:'', dampingRatioLower:'', dampingRatioUpper:'', dampingRatioDisc:'',viscoMaterial:'', dynamicStiff:''})}>
 					Add Neutralizer
 				</Button>
-        <Button
-          variant="danger"
-          disabled={!rows?.some((row) => row.checked)}
-          onClick={removeNeutralizers}
-        >
-          Remove Neutralizers
-        </Button>
-      </div>
+				<Button
+					variant="danger"
+					disabled={!rows?.some((row) => row.checked)}
+					onClick={removeNeutralizers}
+				>
+					Remove Neutralizers
+				</Button>
+			</div>
 
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>Select</th>
-            <th>Mass</th>
-            <th>Neutralizer Type</th>
-            <th>Modal Position</th>
-            <th>Natural Frequency Lower Bound</th>
-            <th>Natural Frequency Upper Bound</th>
-            <th>Natural Frequency Discretization</th>
-            <th>Damping Ratio Lower Bound</th>
-            <th>Damping Ratio Upper Bound</th>
-            <th>Damping Ratio Discretization</th>
-            <th>Viscoelastic Material</th>
-            <th>Dynamic Stiffness</th>
-          </tr>
-        </thead>
-        <tbody>
-          {fields.map((row, index) => (
-            <tr key={row.id}>
-              <td>
+			<Table striped bordered hover>
+				<thead>
+					<tr>
+						<th>Select</th>
+						<th>Mass</th>
+						<th>Neutralizer Type</th>
+						<th>Modal Position</th>
+						<th>Natural Frequency Lower Bound</th>
+						<th>Natural Frequency Upper Bound</th>
+						<th>Natural Frequency Discretization</th>
+						<th>Damping Ratio Lower Bound</th>
+						<th>Damping Ratio Upper Bound</th>
+						<th>Damping Ratio Discretization</th>
+						<th>Viscoelastic Material</th>
+						<th>Dynamic Stiffness</th>
+					</tr>
+				</thead>
+				<tbody>
+					{fields.map((row, index) => (
+						<tr key={row.id}>
+							<td>
 								<Controller
 									name={`neutralizerData.rows.${index}.checked`}
 									control={control}
 									defaultValue={false}
 									render={({ field }) => (
 										<Form.Check
-                  		{...field}
+											{...field}
 											checked={field.value}
-                		/>
+										/>
 									)}
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller
 									name={`neutralizerData.rows.${index}.mass`}
 									control={control}
@@ -222,10 +250,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									render={({ field, fieldState }) => (
 										<>
 											<Form.Control
-                  			{...field}
+												{...field}
 												type='text'
-                  			placeholder="Mass"
-                			/>
+												placeholder="Mass"
+											/>
 											{fieldState.error && (
 												<Form.Text className='text-danger'>
 													{fieldState.error.message}
@@ -234,42 +262,43 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>
 									)}
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller
 									name={`neutralizerData.rows.${index}.type`}
 									control={control}
+									rules = {{required: 'This field is required.'}}
 									defaultValue={[0]} 
-									render={({ field }) => (
-										<Form.Control
-											as="select"
-											multiple
-											value={field.value}
-											/* onChange={(e) => {
-												const selectedValues = Array.from(
-													e.target.selectedOptions,
-													option => option.value
-												);
-												field.onChange(selectedValues);
-											}} */ 
-											 onChange={(e) => handleTypeChange(e, field.onChange, index)}
-										>
-											<option value="0">User Defined Dynamic Stiffness</option>
-											<option value="1">Viscoelastic</option>
-											<option value="2">Viscous</option>
-										</Form.Control>
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+												as="select"
+												multiple
+												value={field.value}
+												onChange={(e) => handleTypeChange(e, field.onChange, index)}
+											>
+												<option value="0">User Defined Dynamic Stiffness</option>
+												<option value="1">Viscoelastic</option>
+												<option value="2">Viscous</option>
+											</Form.Control>
+											{fieldState.error && (
+												<Form.Text className='text-danger'>
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
 									)}
 								/>
-              </td>
-              <td>
-                <Form.Control
-                  type="text"
-                  value={row.modalPosition}
+							</td>
+							<td>
+								<Form.Control
+									type="text"
+									value={row.modalPosition}
                   //onChange={(e) => handleInputChange(row.id, 'modalPosition', e.target.value)}
-                  placeholder="[0,1,4,7]"
-                />
-              </td>
-              <td>
+									placeholder="[0,1,4,7]"
+								/>
+							</td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.natFreqLower`} 
 									control={control}
@@ -290,7 +319,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									)}
 								/>
 							</td>
-              <td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.natFreqUpper`} 
 									control={control}
@@ -310,8 +339,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>
 									)}
 								/> 			
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.natFreqDisc`}
 									control={control}
@@ -320,9 +349,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									render={({ field, fieldState }) => (
 										<>
 											<Form.Control
-                  			{...field}
+												{...field}
 												type="text"
-                			/>
+											/>
 											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
@@ -331,8 +360,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>	
 									)}
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.dampingRatioLower`}
 									control={control}
@@ -353,8 +382,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>										
 									)}
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller
 									name={`neutralizerData.rows.${index}.dampingRatioUpper`}
 									control={control}
@@ -375,8 +404,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>
 									)} 
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.dampingRatioDisc`}
 									control={control}
@@ -397,21 +426,21 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>
 									)}
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.viscoelasticMaterial`}
 									control={control}
-									rules={ { required: 'This field is required' } }
+									rules={getRulesViscoelasticMaterial(index)}// { { required: 'This field is required' } }
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
-                			<Form.Control
+											<Form.Control
 												{...field}
-                  			type="text"
-                        placeholder="[Material1, Material2]"
-                  			disabled={!rows?.[index]?.type.includes('2')}
-                			/>		
+												type="text"
+												placeholder="[Material1, Material2]"
+												disabled={!rows?.[index]?.type.includes('2')}
+											/>		
 											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
@@ -420,21 +449,21 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>
 									)}
 								/>
-              </td>
-              <td>
+							</td>
+							<td>
 								<Controller 
 									name={`neutralizerData.rows.${index}.dynamicStiffness`}
 									control={control}
-									rules={ {required: 'This field is required. '} }
+									rules= {getRulesDynamicStiffness(index)} //{ {required: 'This field is required. '} }
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
 											<Form.Control
 												{...field}
-                  			type="text"
-                  			placeholder="[Stiffness1, Stiffness2]"
-                  			disabled={!(rows?.[index]?.type.includes('0'))}
-                			/>
+												type="text"
+												placeholder="[Stiffness1, Stiffness2]"
+												disabled={!(rows?.[index]?.type.includes('0'))}
+											/>
 											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
@@ -443,17 +472,16 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										</>
 									)}
 								/>
-                
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</Table>
 
-      <ViscoelasticMaterials control={control} errors={errors} getValues={getValues}/>
-      <DynamicStiffness />
-    </div>
-  );
+			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues}/>
+			<DynamicStiffness />
+			</div>
+		);
 };
 
 export default NeutralizerData;
