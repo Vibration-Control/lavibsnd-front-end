@@ -254,9 +254,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 											}} */ 
 											 onChange={(e) => handleTypeChange(e, field.onChange, index)}
 										>
-											<option value="0">Type 0</option>
-											<option value="1">Type 1</option>
-											<option value="2">Type 2</option>
+											<option value="0">User Defined Dynamic Stiffness</option>
+											<option value="1">Viscoelastic</option>
+											<option value="2">Viscous</option>
 										</Form.Control>
 									)}
 								/>

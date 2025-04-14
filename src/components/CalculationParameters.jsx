@@ -6,9 +6,14 @@ const CalculationParameters = ({ control, errors }) => {
   const rules = {
     required: 'This field is required',
     pattern: {
-      value: /^\d+(\.\d+)?$/,
-      message: 'Please enter a valid number'
-    }
+      value: /^-?\d*\.?\d+$/,
+      message: 'Please enter a valid number',
+    },
+  };
+
+  const parseValue = (value) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? '' : parsed;
   };
 
   return (
@@ -25,7 +30,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 10.5" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="any"
+                    placeholder="e.g., 10.5"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseValue(e.target.value))}
+                  />
                   {errors.objectiveFunctionSearchLowerBound && (
                     <Form.Text className="text-danger">
                       {errors.objectiveFunctionSearchLowerBound.message}
@@ -36,6 +48,7 @@ const CalculationParameters = ({ control, errors }) => {
             />
           </Form.Group>
         </Col>
+
         <Col>
           <Form.Group controlId="objectiveFunctionSearchUpperBound">
             <Form.Label>Frequency Upper Bound</Form.Label>
@@ -46,7 +59,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 50.0" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="any"
+                    placeholder="e.g., 50.0"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseValue(e.target.value))}
+                  />
                   {errors.objectiveFunctionSearchUpperBound && (
                     <Form.Text className="text-danger">
                       {errors.objectiveFunctionSearchUpperBound.message}
@@ -57,6 +77,7 @@ const CalculationParameters = ({ control, errors }) => {
             />
           </Form.Group>
         </Col>
+
         <Col>
           <Form.Group controlId="objectiveFunctionSearchDiscretization">
             <Form.Label>Discretization</Form.Label>
@@ -67,7 +88,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 5" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 5"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                   {errors.objectiveFunctionSearchDiscretization && (
                     <Form.Text className="text-danger">
                       {errors.objectiveFunctionSearchDiscretization.message}
@@ -91,7 +119,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 3" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 3"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                   {errors.excitationNodeOptimization && (
                     <Form.Text className="text-danger">
                       {errors.excitationNodeOptimization.message}
@@ -102,6 +137,7 @@ const CalculationParameters = ({ control, errors }) => {
             />
           </Form.Group>
         </Col>
+
         <Col>
           <Form.Group controlId="responseNodeOptimization">
             <Form.Label>Response Point</Form.Label>
@@ -112,7 +148,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 2" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 2"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                   {errors.responseNodeOptimization && (
                     <Form.Text className="text-danger">
                       {errors.responseNodeOptimization.message}
@@ -139,7 +182,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 10.5" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="any"
+                    placeholder="e.g., 10.5"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseValue(e.target.value))}
+                  />
                   {errors.plotLowerBound && (
                     <Form.Text className="text-danger">
                       {errors.plotLowerBound.message}
@@ -150,6 +200,7 @@ const CalculationParameters = ({ control, errors }) => {
             />
           </Form.Group>
         </Col>
+
         <Col>
           <Form.Group controlId="plotUpperBound">
             <Form.Label>Frequency Upper Bound</Form.Label>
@@ -160,7 +211,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 50.0" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="any"
+                    placeholder="e.g., 50.0"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseValue(e.target.value))}
+                  />
                   {errors.plotUpperBound && (
                     <Form.Text className="text-danger">
                       {errors.plotUpperBound.message}
@@ -171,6 +229,7 @@ const CalculationParameters = ({ control, errors }) => {
             />
           </Form.Group>
         </Col>
+
         <Col>
           <Form.Group controlId="plotDiscretization">
             <Form.Label>Discretization</Form.Label>
@@ -181,7 +240,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 5" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 5"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                   {errors.plotDiscretization && (
                     <Form.Text className="text-danger">
                       {errors.plotDiscretization.message}
@@ -205,7 +271,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 3" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 3"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                   {errors.excitationNodePlot && (
                     <Form.Text className="text-danger">
                       {errors.excitationNodePlot.message}
@@ -216,6 +289,7 @@ const CalculationParameters = ({ control, errors }) => {
             />
           </Form.Group>
         </Col>
+
         <Col>
           <Form.Group controlId="responseNodePlot">
             <Form.Label>Response Point</Form.Label>
@@ -226,7 +300,14 @@ const CalculationParameters = ({ control, errors }) => {
               defaultValue=""
               render={({ field }) => (
                 <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 2" className="rounded" />
+                  <Form.Control
+                    {...field}
+                    type="number"
+                    step="1"
+                    placeholder="e.g., 2"
+                    className="rounded"
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                   {errors.responseNodePlot && (
                     <Form.Text className="text-danger">
                       {errors.responseNodePlot.message}
@@ -243,90 +324,41 @@ const CalculationParameters = ({ control, errors }) => {
 
       <h5>Genetic Algorithm</h5>
       <Row className="mb-3">
-        <Col>
-          <Form.Group controlId="geneticAlgorithm.populationSize">
-            <Form.Label>Population Size</Form.Label>
-            <Controller
-              name="geneticAlgorithm.populationSize"
-              control={control}
-              rules={rules}
-              defaultValue=""
-              render={({ field }) => (
-                <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 100" className="rounded" />
-                  {errors.geneticAlgorithm?.populationSize && (
-                    <Form.Text className="text-danger">
-                      {errors.geneticAlgorithm.populationSize.message}
-                    </Form.Text>
-                  )}
-                </>
-              )}
-            />
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="geneticAlgorithm.generations">
-            <Form.Label>Generations</Form.Label>
-            <Controller
-              name="geneticAlgorithm.generations"
-              control={control}
-              rules={rules}
-              defaultValue=""
-              render={({ field }) => (
-                <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 50" className="rounded" />
-                  {errors.geneticAlgorithm?.generations && (
-                    <Form.Text className="text-danger">
-                      {errors.geneticAlgorithm.generations.message}
-                    </Form.Text>
-                  )}
-                </>
-              )}
-            />
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="geneticAlgorithm.crossover">
-            <Form.Label>Crossover</Form.Label>
-            <Controller
-              name="geneticAlgorithm.crossover"
-              control={control}
-              rules={rules}
-              defaultValue=""
-              render={({ field }) => (
-                <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 20" className="rounded" />
-                  {errors.geneticAlgorithm?.crossover && (
-                    <Form.Text className="text-danger">
-                      {errors.geneticAlgorithm.crossover.message}
-                    </Form.Text>
-                  )}
-                </>
-              )}
-            />
-          </Form.Group>
-        </Col>
-        <Col>
-          <Form.Group controlId="geneticAlgorithm.mutation">
-            <Form.Label>Mutation</Form.Label>
-            <Controller
-              name="geneticAlgorithm.mutation"
-              control={control}
-              rules={rules}
-              defaultValue=""
-              render={({ field }) => (
-                <>
-                  <Form.Control {...field} type="text" placeholder="e.g., 5" className="rounded" />
-                  {errors.geneticAlgorithm?.mutation && (
-                    <Form.Text className="text-danger">
-                      {errors.geneticAlgorithm.mutation.message}
-                    </Form.Text>
-                  )}
-                </>
-              )}
-            />
-          </Form.Group>
-        </Col>
+        {[
+          { name: 'geneticAlgorithm.populationSize', label: 'Population Size' },
+          { name: 'geneticAlgorithm.generations', label: 'Generations' },
+          { name: 'geneticAlgorithm.crossover', label: 'Crossover' },
+          { name: 'geneticAlgorithm.mutation', label: 'Mutation' },
+        ].map(({ name, label }) => (
+          <Col key={name}>
+            <Form.Group controlId={name}>
+              <Form.Label>{label}</Form.Label>
+              <Controller
+                name={name}
+                control={control}
+                rules={rules}
+                defaultValue=""
+                render={({ field }) => (
+                  <>
+                    <Form.Control
+                      {...field}
+                      type="number"
+                      step="1"
+                      placeholder={`e.g., ${label === 'Mutation' ? '5' : '100'}`}
+                      className="rounded"
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                    {errors.geneticAlgorithm?.[name.split('.')[1]] && (
+                      <Form.Text className="text-danger">
+                        {errors.geneticAlgorithm[name.split('.')[1]].message}
+                      </Form.Text>
+                    )}
+                  </>
+                )}
+              />
+            </Form.Group>
+          </Col>
+        ))}
       </Row>
     </Form>
   );
