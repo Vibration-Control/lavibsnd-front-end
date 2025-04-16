@@ -36,8 +36,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			if (!value || !upperBound)
 				return true
 	
-			return (parseFloat(upperBound) < parseFloat(value)) 
-				|| 'Value must be higher than Natural Frequency Lower Bound'
+			return (parseFloat(upperBound) > parseFloat(value)) 
+				|| 'Value must be lower than Natural Frequency Upper Bound'
 		}
 	})
 
@@ -226,255 +226,265 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					</tr>
 				</thead>
 				<tbody>
-					{fields.map((row, index) => (
-						<tr key={row.id}>
-							<td>
-								<Controller
-									name={`neutralizerData.rows.${index}.checked`}
-									control={control}
-									defaultValue={false}
-									render={({ field }) => (
-										<Form.Check
-											{...field}
-											checked={field.value}
-										/>
-									)}
-								/>
-							</td>
-							<td>
-								<Controller
-									name={`neutralizerData.rows.${index}.mass`}
-									control={control}
-									rules={floatRules}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
+					{fields.map((row, index) => {
+						const type = rows?.[index]?.type || [];
+						const isNatFreqEnabled = type.includes('1') || type.includes('2');
+						const isDampingEnabled = type.includes('2');
+						const isViscoelasticEnabled = type.includes('1');
+						const isDynamicStiffnessEnabled = type.includes('0');
+
+						return (
+							<tr key={row.id}>
+								<td>
+									<Controller
+										name={`neutralizerData.rows.${index}.checked`}
+										control={control}
+										defaultValue={false}
+										render={({ field }) => (
+											<Form.Check
 												{...field}
-												type='text'
-												placeholder="Mass"
+												checked={field.value}
 											/>
-											{fieldState.error && (
-												<Form.Text className='text-danger'>
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>
-									)}
-								/>
-							</td>
-							<td>
-								<Controller
-									name={`neutralizerData.rows.${index}.type`}
-									control={control}
-									rules = {{required: 'This field is required.'}}
-									defaultValue={[0]} 
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												as="select"
-												multiple
-												value={field.value}
-												onChange={(e) => handleTypeChange(e, field.onChange, index)}
-											>
-												<option value="0">User Defined Dynamic Stiffness</option>
-												<option value="1">Viscoelastic</option>
-												<option value="2">Viscous</option>
-											</Form.Control>
-											{fieldState.error && (
-												<Form.Text className='text-danger'>
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>
-									)}
-								/>
-							</td>
-							<td>
-								<Form.Control
-									type="text"
-									value={row.modalPosition}
-                  //onChange={(e) => handleInputChange(row.id, 'modalPosition', e.target.value)}
-									placeholder="[0,1,4,7]"
-								/>
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.natFreqLower`} 
-									control={control}
-									rules={getRulesNaturalFreqLowerBound(index)}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												{...field}
-												type="text"
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>
-									)}
-								/>
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.natFreqUpper`} 
-									control={control}
-									rules={getRulesNaturalFreqUpperBound(index)}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												{...field}
-												type="text"
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>
-									)}
-								/> 			
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.natFreqDisc`}
-									control={control}
-									rules={intRules}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												{...field}
-												type="text"
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>	
-									)}
-								/>
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.dampingRatioLower`}
-									control={control}
-									rules={getRulesDampingRatioLower(index)}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control 
-												{...field} 
-												type='text'
-												disabled={!rows?.[index]?.type.includes('1')}
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>										
-									)}
-								/>
-							</td>
-							<td>
-								<Controller
-									name={`neutralizerData.rows.${index}.dampingRatioUpper`}
-									control={control}
-									rules={getRulesDampingRatioUpper(index)}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control 
-												{...field}
-												type='text'
-												disabled={!rows?.[index]?.type.includes('1')}
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>
-									)} 
-								/>
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.dampingRatioDisc`}
-									control={control}
-									rules={getRulesDampingRatioDiscretization(index)}
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												{...field}
-												type="text"
-												disabled={!rows?.[index]?.type.includes('1')}
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}
-										</>
-									)}
-								/>
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.viscoelasticMaterial`}
-									control={control}
-									rules={getRulesViscoelasticMaterial(index)}// { { required: 'This field is required' } }
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												{...field}
-												type="text"
-												placeholder="[Material1, Material2]"
-												disabled={!rows?.[index]?.type.includes('2')}
-											/>		
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}						
-										</>
-									)}
-								/>
-							</td>
-							<td>
-								<Controller 
-									name={`neutralizerData.rows.${index}.dynamicStiffness`}
-									control={control}
-									rules= {getRulesDynamicStiffness(index)} //{ {required: 'This field is required. '} }
-									defaultValue=''
-									render={({ field, fieldState }) => (
-										<>
-											<Form.Control
-												{...field}
-												type="text"
-												placeholder="[Stiffness1, Stiffness2]"
-												disabled={!(rows?.[index]?.type.includes('0'))}
-											/>
-											{fieldState.error && (
-												<Form.Text className="text-danger">
-													{fieldState.error.message}
-												</Form.Text>
-											)}	
-										</>
-									)}
-								/>
-							</td>
-						</tr>
-					))}
+										)}
+									/>
+								</td>
+								<td>
+									<Controller
+										name={`neutralizerData.rows.${index}.mass`}
+										control={control}
+										rules={floatRules}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type='text'
+													placeholder="Mass"
+												/>
+												{fieldState.error && (
+													<Form.Text className='text-danger'>
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/>
+								</td>
+								<td>
+									<Controller
+										name={`neutralizerData.rows.${index}.type`}
+										control={control}
+										rules = {{required: 'This field is required.'}}
+										defaultValue={[0]} 
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													as="select"
+													multiple
+													value={field.value}
+													onChange={(e) => handleTypeChange(e, field.onChange, index)}
+												>
+													<option value="0">User Defined Dynamic Stiffness</option>
+													<option value="1">Viscoelastic</option>
+													<option value="2">Viscous</option>
+												</Form.Control>
+												{fieldState.error && (
+													<Form.Text className='text-danger'>
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/>
+								</td>
+								<td>
+									<Form.Control
+										type="text"
+										value={row.modalPosition}
+										placeholder="[0,1,4,7]"
+									/>
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.natFreqLower`} 
+										control={control}
+										rules={getRulesNaturalFreqLowerBound(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													disabled={!isNatFreqEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/>
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.natFreqUpper`} 
+										control={control}
+										rules={getRulesNaturalFreqUpperBound(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													disabled={!isNatFreqEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/> 			
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.natFreqDisc`}
+										control={control}
+										rules={intRules}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													disabled={!isNatFreqEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>	
+										)}
+									/>
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.dampingRatioLower`}
+										control={control}
+										rules={getRulesDampingRatioLower(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field} 
+													type='text'
+													disabled={!isDampingEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>										
+										)}
+									/>
+								</td>
+								<td>
+									<Controller
+										name={`neutralizerData.rows.${index}.dampingRatioUpper`}
+										control={control}
+										rules={getRulesDampingRatioUpper(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control 
+													{...field}
+													type='text'
+													disabled={!isDampingEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)} 
+									/>
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.dampingRatioDisc`}
+										control={control}
+										rules={getRulesDampingRatioDiscretization(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													disabled={!isDampingEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}
+											</>
+										)}
+									/>
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.viscoelasticMaterial`}
+										control={control}
+										rules={getRulesViscoelasticMaterial(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													placeholder="[Material1, Material2]"
+													disabled={!isViscoelasticEnabled}
+												/>		
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}						
+											</>
+										)}
+									/>
+								</td>
+								<td>
+									<Controller 
+										name={`neutralizerData.rows.${index}.dynamicStiffness`}
+										control={control}
+										rules= {getRulesDynamicStiffness(index)}
+										defaultValue=''
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													{...field}
+													type="text"
+													placeholder="[Stiffness1, Stiffness2]"
+													disabled={!isDynamicStiffnessEnabled}
+												/>
+												{fieldState.error && (
+													<Form.Text className="text-danger">
+														{fieldState.error.message}
+													</Form.Text>
+												)}	
+											</>
+										)}
+									/>
+								</td>
+							</tr>
+						)
+					})}
 				</tbody>
 			</Table>
 
