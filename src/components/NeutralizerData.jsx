@@ -10,7 +10,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		name: 'neutralizerData.rows'
 	})
 
-	const rows = useWatch({ control, name:'neutralizerData.rows'})
+	const rows = useWatch({ control, name: 'neutralizerData.rows' })
 
 	const floatRules = {
 		required: 'This field is required',
@@ -28,118 +28,136 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 	}
 
-	const getRulesNaturalFreqLowerBound = (rowIndex) => ({
-		...floatRules,
-		validate: (value) => {
-			const upperBound = rows[rowIndex].natFreqUpper
-		
-			if (!value || !upperBound)
-				return true
-	
-			return (parseFloat(upperBound) > parseFloat(value)) 
-				|| 'Value must be lower than Natural Frequency Upper Bound'
-		}
-	})
-
-	const getRulesNaturalFreqUpperBound = (rowIndex) => ({
-		...floatRules,
-		validate: (value) => {
-			const lowerBound = rows[rowIndex].natFreqLower
-		
-			if (!value || !lowerBound)
-				return true
-
-			return (parseFloat(lowerBound) < parseFloat(value)) 
-				|| 'Value must be higher than Natural Frequency Lower Bound'
-		}
-	})
-
-	const getRulesDampingRatioLower = (rowIndex) => {
-		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1')
-		
-		if (!typeIncludes1) {
+	const getRulesNatFreqLower = (rowIndex, isNatFreqEnabled) => {
+		if (!isNatFreqEnabled) {
 			return {
 				required: false
-			}; 
+			};
 		}
+		
+		return {
+			...floatRules,
+			validate: (value) => {
+				const upperBound = rows[rowIndex].natFreqUpper
+
+				if (!value || !upperBound)
+					return true
 	
+				return (parseFloat(upperBound) > parseFloat(value)) 
+					|| 'Value must be lower than Natural Frequency Upper Bound'
+			}
+		}
+	}
+
+	const getRulesNatFreqUpper = (rowIndex, isNatFreqEnabled) => {
+		if (!isNatFreqEnabled) {
+			return {
+				required: false
+			};
+		}
+		
+		return {
+			...floatRules,
+			validate: (value) => {
+				const lowerBound = rows[rowIndex].natFreqLower
+
+				if (!value || !lowerBound)
+					return true
+
+				return (parseFloat(lowerBound) < parseFloat(value))
+					|| 'Value must be higher than Natural Frequency Lower Bound'
+			}
+		}
+	}
+
+	const getRulesNatFreqDiscretization = (isNatFreqEnabled) => {
+		if (!isNatFreqEnabled) {
+			return {
+				required: false
+			};
+		}
+
+		return {
+			...intRules
+		}
+	}		
+
+	const getRulesDampingRatioLower = (rowIndex, isDampingEnabled) => {
+		if (!isDampingEnabled) {
+			return {
+				required: false
+			};
+		}
+
 		return {
 			...floatRules,
 			validate: (value) => {
 				const upperBound = rows[rowIndex].dampingRatioUpper;
 
 				if (!value || !upperBound)
-					 return true;
+					return true;
 
-				return parseFloat(value) < parseFloat(upperBound) 
+				return parseFloat(value) < parseFloat(upperBound)
 					|| 'Value must be lower than Damping Ratio Upper Bound';
 			}
 		};
 	};
 
-	const getRulesDampingRatioUpper = (rowIndex) => {
-		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1')
-
-		if (!typeIncludes1) {
+	const getRulesDampingRatioUpper = (rowIndex, isDampingEnabled) => {
+		if (!isDampingEnabled) {
 			return {
 				required: false
-			}; 
+			};
 		}
 
-	
+
 		return {
 			...floatRules,
 			validate: (value) => {
 				const lowerBound = rows[rowIndex].dampingRatioLower;
 
-				if (!value || !lowerBound) 
+				if (!value || !lowerBound)
 					return true;
 
-				return parseFloat(value) > parseFloat(lowerBound) 
+				return parseFloat(value) > parseFloat(lowerBound)
 					|| 'Value must be lower than Damping Ratio Upper Bound';
 			}
 		};
 	};
 
-	const getRulesDampingRatioDiscretization = (rowIndex) => {
-		const typeIncludes1 = rows?.[rowIndex]?.type?.includes('1')
-
-		if (!typeIncludes1) {
-			return {
-				required: false
-			};
-		}
-
-		return { 
-			...intRules
-		}
-	}	
-
-	const getRulesViscoelasticMaterial = (rowIndex) => {
-		const typeIncludes2 = rows?.[rowIndex]?.type?.includes('2')
-
-		if (!typeIncludes2) {
+	const getRulesDampingRatioDiscretization = (isDampingEnabled) => {
+		if (!isDampingEnabled) {
 			return {
 				required: false
 			};
 		}
 
 		return {
-			required: 'This field is required.'
+			...intRules
 		}
 	}
 
-	const getRulesDynamicStiffness = (rowIndex) => {
-		const typeIncludes0 = rows?.[rowIndex]?.type?.includes('0')
-
-		if (!typeIncludes0) {
+	const getRulesViscoelasticMaterial = (isViscoelasticEnabled) => {
+		if (!isViscoelasticEnabled) {
 			return {
 				required: false
 			};
 		}
 
 		return {
-			required: 'This field is required.'
+			required: 'This field is required'
+		}
+	}
+
+	const getRulesDynamicStiffness = (isDynamicStiffnessEnabled) => {
+		if (!isDynamicStiffnessEnabled) {
+			return {
+				required: false
+			};
+		}
+
+		return {
+			required: 'This field is required'
 		}
 	}
 
@@ -149,7 +167,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		const indexesToRemove = currentRows
 			.map((row, index) => (row?.checked ? index : -1))
 			.filter(index => index !== -1)
-			.sort((a,b) => b - a);
+			.sort((a, b) => b - a);
 
 		indexesToRemove.forEach(index => remove(index))
 	};
@@ -162,6 +180,17 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 		fieldOnChange(selectedValues)
 
+		if (!selectedValues.includes('1') && !selectedValues.includes('2')) {
+			setValue(`neutralizerData.rows.${rowIndex}.natFreqLower`, '')
+			setValue(`neutralizerData.rows.${rowIndex}.natFreqUpper`, '')
+			setValue(`neutralizerData.rows.${rowIndex}.natFreqDisc`, '')
+
+			clearErrors([
+				`neutralizerData.rows.${rowIndex}.natFreqLower`,
+				`neutralizerData.rows.${rowIndex}.natFreqUpper`,
+				`neutralizerData.rows.${rowIndex}.natFreqDisc`
+			])
+		}
 		if (!selectedValues.includes('0')) {
 			setValue(`neutralizerData.rows.${rowIndex}.dynamicStiffness`, '')
 
@@ -170,12 +199,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			])
 		}
 
-		if (!selectedValues.includes('1')) {
+		if (!selectedValues.includes('2')) {
 			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioLower`, '');
 			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioUpper`, '');
-			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioDisc`, '');	
-		
-	
+			setValue(`neutralizerData.rows.${rowIndex}.dampingRatioDisc`, '');
+
+
 			clearErrors([
 				`neutralizerData.rows.${rowIndex}.dampingRatioLower`,
 				`neutralizerData.rows.${rowIndex}.dampingRatioUpper`,
@@ -183,20 +212,20 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			]);
 		}
 
-		if (!selectedValues.includes('2')) {
+		if (!selectedValues.includes('1')) {
 			setValue(`neutralizerData.rows.${rowIndex}.viscoelasticMaterial`, '');
 
 			clearErrors([
 				`neutralizerData.rows.${rowIndex}.viscoelasticMaterial`
 			])
-		}		
+		}
 	}
 
 
 	return (
 		<div>
 			<div className="d-flex justify-content-between mb-3">
-				<Button variant="primary" onClick={() => append({ checked:false, mass:'', type:[], natFreqLower:'', natFreqUpper:'', natFreqDisc:'', dampingRatioLower:'', dampingRatioUpper:'', dampingRatioDisc:'',viscoMaterial:'', dynamicStiff:''})}>
+				<Button variant="primary" onClick={() => append({ checked: false, mass: '', types: [], natFreqLower: '', natFreqUpper: '', natFreqDisc: '', dampingRatioLower: '', dampingRatioUpper: '', dampingRatioDisc: '', viscoMaterial: '', dynamicStiff: '' })}>
 					Add Neutralizer
 				</Button>
 				<Button
@@ -227,11 +256,11 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				</thead>
 				<tbody>
 					{fields.map((row, index) => {
-						const type = rows?.[index]?.type || [];
-						const isNatFreqEnabled = type.includes('1') || type.includes('2');
-						const isDampingEnabled = type.includes('2');
-						const isViscoelasticEnabled = type.includes('1');
-						const isDynamicStiffnessEnabled = type.includes('0');
+						const types = rows?.[index]?.types || [];
+						const isNatFreqEnabled = types.includes('1') || types.includes('2');
+						const isDampingEnabled = types.includes('2');
+						const isViscoelasticEnabled = types.includes('1');
+						const isDynamicStiffnessEnabled = types.includes('0');
 
 						return (
 							<tr key={row.id}>
@@ -240,12 +269,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										name={`neutralizerData.rows.${index}.checked`}
 										control={control}
 										defaultValue={false}
-										render={({ field }) => (
-											<Form.Check
-												{...field}
-												checked={field.value}
-											/>
-										)}
+										render={({ field }) => <Form.Check {...field} checked={field.value} />}
 									/>
 								</td>
 								<td>
@@ -253,18 +277,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										name={`neutralizerData.rows.${index}.mass`}
 										control={control}
 										rules={floatRules}
-										defaultValue=''
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control
-													{...field}
-													type='text'
-													placeholder="Mass"
-												/>
+												<Form.Control {...field} type="text" placeholder="Mass" />
 												{fieldState.error && (
-													<Form.Text className='text-danger'>
-														{fieldState.error.message}
-													</Form.Text>
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
 											</>
 										)}
@@ -272,28 +290,20 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 								</td>
 								<td>
 									<Controller
-										name={`neutralizerData.rows.${index}.type`}
+										name={`neutralizerData.rows.${index}.types`}
 										control={control}
-										rules = {{required: 'This field is required.'}}
-										defaultValue={[0]} 
-										render={({ field, fieldState }) => (
-											<>
-												<Form.Control
-													as="select"
-													multiple
-													value={field.value}
-													onChange={(e) => handleTypeChange(e, field.onChange, index)}
-												>
-													<option value="0">User Defined Dynamic Stiffness</option>
-													<option value="1">Viscoelastic</option>
-													<option value="2">Viscous</option>
-												</Form.Control>
-												{fieldState.error && (
-													<Form.Text className='text-danger'>
-														{fieldState.error.message}
-													</Form.Text>
-												)}
-											</>
+										defaultValue={['0']}
+										render={({ field }) => (
+											<Form.Control
+												as="select"
+												multiple
+												value={field.value}
+												onChange={(e) => handleTypeChange(e, field.onChange, index)}
+											>
+												<option value="0">User Defined Dynamic Stiffness</option>
+												<option value="1">Viscoelastic</option>
+												<option value="2">Viscous</option>
+											</Form.Control>
 										)}
 									/>
 								</td>
@@ -305,90 +315,66 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									/>
 								</td>
 								<td>
-									<Controller 
-										name={`neutralizerData.rows.${index}.natFreqLower`} 
+									<Controller
+										name={`neutralizerData.rows.${index}.natFreqLower`}
 										control={control}
-										rules={getRulesNaturalFreqLowerBound(index)}
-										defaultValue=''
+										rules={getRulesNatFreqLower(index, isNatFreqEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control
-													{...field}
-													type="text"
-													disabled={!isNatFreqEnabled}
-												/>
+												<Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
 											</>
 										)}
 									/>
 								</td>
 								<td>
-									<Controller 
-										name={`neutralizerData.rows.${index}.natFreqUpper`} 
+									<Controller
+										name={`neutralizerData.rows.${index}.natFreqUpper`}
 										control={control}
-										rules={getRulesNaturalFreqUpperBound(index)}
-										defaultValue=''
+										rules={getRulesNatFreqUpper(index, isNatFreqEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control
-													{...field}
-													type="text"
-													disabled={!isNatFreqEnabled}
-												/>
+												<Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
 											</>
 										)}
-									/> 			
+									/>
 								</td>
 								<td>
-									<Controller 
+									<Controller
 										name={`neutralizerData.rows.${index}.natFreqDisc`}
 										control={control}
-										rules={intRules}
-										defaultValue=''
+										rules={getRulesNatFreqDiscretization(isNatFreqEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control
-													{...field}
-													type="text"
-													disabled={!isNatFreqEnabled}
-												/>
+												<Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
-											</>	
+											</>
 										)}
 									/>
 								</td>
 								<td>
-									<Controller 
+									<Controller
 										name={`neutralizerData.rows.${index}.dampingRatioLower`}
 										control={control}
-										rules={getRulesDampingRatioLower(index)}
-										defaultValue=''
+										rules={getRulesDampingRatioLower(index, isDampingEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control 
-													{...field} 
-													type='text'
-													disabled={!isDampingEnabled}
-												/>
+												<Form.Control {...field} type="text" disabled={!isDampingEnabled} />
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
-											</>										
+											</>
 										)}
 									/>
 								</td>
@@ -396,52 +382,40 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									<Controller
 										name={`neutralizerData.rows.${index}.dampingRatioUpper`}
 										control={control}
-										rules={getRulesDampingRatioUpper(index)}
-										defaultValue=''
+										rules={getRulesDampingRatioUpper(index, isDampingEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control 
-													{...field}
-													type='text'
-													disabled={!isDampingEnabled}
-												/>
+												<Form.Control {...field} type="text" disabled={!isDampingEnabled} />
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
-												)}
-											</>
-										)} 
-									/>
-								</td>
-								<td>
-									<Controller 
-										name={`neutralizerData.rows.${index}.dampingRatioDisc`}
-										control={control}
-										rules={getRulesDampingRatioDiscretization(index)}
-										defaultValue=''
-										render={({ field, fieldState }) => (
-											<>
-												<Form.Control
-													{...field}
-													type="text"
-													disabled={!isDampingEnabled}
-												/>
-												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
 											</>
 										)}
 									/>
 								</td>
 								<td>
-									<Controller 
+									<Controller
+										name={`neutralizerData.rows.${index}.dampingRatioDisc`}
+										control={control}
+										rules={getRulesDampingRatioDiscretization(isDampingEnabled)}
+										defaultValue=""
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control {...field} type="text" disabled={!isDampingEnabled} />
+												{fieldState.error && (
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
+												)}
+											</>
+										)}
+									/>
+								</td>
+								<td>
+									<Controller
 										name={`neutralizerData.rows.${index}.viscoelasticMaterial`}
 										control={control}
-										rules={getRulesViscoelasticMaterial(index)}
-										defaultValue=''
+										rules={getRulesViscoelasticMaterial(isViscoelasticEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
 												<Form.Control
@@ -449,22 +423,20 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 													type="text"
 													placeholder="[Material1, Material2]"
 													disabled={!isViscoelasticEnabled}
-												/>		
+												/>
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
-												)}						
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
+												)}
 											</>
 										)}
 									/>
 								</td>
 								<td>
-									<Controller 
+									<Controller
 										name={`neutralizerData.rows.${index}.dynamicStiffness`}
 										control={control}
-										rules= {getRulesDynamicStiffness(index)}
-										defaultValue=''
+										rules={getRulesDynamicStiffness(isDynamicStiffnessEnabled)}
+										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
 												<Form.Control
@@ -474,24 +446,23 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 													disabled={!isDynamicStiffnessEnabled}
 												/>
 												{fieldState.error && (
-													<Form.Text className="text-danger">
-														{fieldState.error.message}
-													</Form.Text>
-												)}	
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
+												)}
 											</>
 										)}
 									/>
 								</td>
 							</tr>
-						)
+						);
 					})}
 				</tbody>
 			</Table>
 
-			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues}/>
+
+			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
 			<DynamicStiffness />
-			</div>
-		);
+		</div>
+	);
 };
 
 export default NeutralizerData;

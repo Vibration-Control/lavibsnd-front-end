@@ -117,7 +117,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
                 <Form.Control
                   type="text"
                   value={JSON.stringify(row.mode)}
-                  onChange={(e) => handleRowChange(row.id, 'mode', e.target.value)}
+                  // onChange={(e) => handleRowChange(row.id, 'mode', e.target.value)}
                   placeholder='e.g. [0, 1, 2]'
                 />
               </td>}
