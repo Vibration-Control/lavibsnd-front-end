@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Accordion, Button, Container } from 'react-bootstrap';
 import { useForm, FormProvider } from 'react-hook-form';
 import PrimarySystemData from '../components/PrimarySystemData';
@@ -8,6 +8,7 @@ import Results from '../components/Results';
 import { optimizeNeutralizer } from '../services/apiService';
 
 const NeutralizerOptimization = () => {
+  const [optimizationResult, setOptimizationResult] = useState(null);
   const methods = useForm({
     defaultValues: {
       primarySystemNaturalFrequencies: [],
@@ -87,30 +88,31 @@ const NeutralizerOptimization = () => {
   console.log('Updated Form Values:', methods.getValues());
   const onSubmit = (data) => {
     for (let i = 0; i < data.primarySystemModes.length; i++) {
-        data.primarySystemNaturalFrequencies[i] = data.primarySystemModes[i].naturalFrequency;
-        data.primarySystemModalDamping[i] = data.primarySystemModes[i].modalDamping;
+      data.primarySystemNaturalFrequencies[i] = data.primarySystemModes[i].naturalFrequency;
+      data.primarySystemModalDamping[i] = data.primarySystemModes[i].modalDamping;
     }
-    delete data.primarySystemModes; 
+    delete data.primarySystemModes;
 
     const payload = {
-        ...data
+      ...data
     };
 
     console.log('Saving project with payload:', payload);
     // Add your API call logic here
-};
+  };
 
   const onOptimize = async () => {
     const formValues = methods.getValues();
-    const payload = {...formValues};
+    const payload = { ...formValues };
     try {
       const result = await optimizeNeutralizer(payload);
       console.log('Optimization result:', result);
-      // Handle the result (e.g., display in Results component)
+      setOptimizationResult(result); // <-- Save it to the state
     } catch (error) {
       console.error('Optimization failed:', error);
     }
   };
+
 
   const openExistingProject = async () => {
     const fileInput = document.createElement('input');
@@ -179,7 +181,7 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="3">
             <Accordion.Header>Results</Accordion.Header>
             <Accordion.Body>
-              <Results />
+              <Results optimizationResult={optimizationResult} />
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>

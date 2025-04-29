@@ -1,13 +1,15 @@
 import React from 'react';
 
-const Results = ({ formData, handleInputChange }) => {
+const Results = ({ optimizationResult }) => {
+  if (!optimizationResult) {
+    return <p>No optimization result yet.</p>;
+  }
+
   return (
-    <textarea
-      className="form-control"
-      placeholder="Enter results"
-      value={formData}
-      onChange={(e) => handleInputChange(e.target.value)}
-    />
+    <div>
+      <h4>Optimization Result:</h4>
+      <pre>{JSON.stringify(optimizationResult, null, 2)}</pre>
+    </div>
   );
 };
 
