@@ -10,14 +10,18 @@ const App = () => {
   return (
     <Router>
       <div className="d-flex flex-column min-vh-100">
-        <Header />
-        <div className="flex-grow-1">
+        <div style={{ height: '5vh' }}>
+          <Header />
+        </div>
+        <div style={{ height: '90vh', overflowY: 'auto' }}>
           <Routes>
-            <Route exact path="/" element={<Home/>} />
-            <Route path="/neutralizer-optimization" element={<NeutralizerOptimization/>} />
+            <Route exact path="/" element={<Home />} />
+            <Route path="/neutralizer-optimization" element={<NeutralizerOptimization />} />
           </Routes>
         </div>
-        <Footer />
+        <div style={{ height: '5vh' }}>
+          <Footer />
+        </div>
       </div>
     </Router>
   );
