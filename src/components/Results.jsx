@@ -1,9 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
+import DimensionNeutralizers from './DimensionNeutralizers'; // ajuste o caminho se necessário
+import './Results.css'; // Import custom CSS
 
 const Results = ({ optimizationResult }) => {
   const [showFullResponse, setShowFullResponse] = useState(false);
+  const [showNeutralizers, setShowNeutralizers] = useState(false);
   const [frfType, setFrfType] = useState('receptance'); // 'receptance' | 'mobility' | 'inertance'
+  const [showDimensionNeutralizers, setShowDimensionNeutralizers] = useState(false);
+
 
   const chartData = useMemo(() => {
     if (!optimizationResult) return null;
@@ -12,8 +17,6 @@ const Results = ({ optimizationResult }) => {
     let primaryFRF = optimizationResult.primary_system_frf;
     let composedFRF = optimizationResult.composed_system_frf;
 
-    // Calculate mobility and inertance if needed
-    // Update FRFs based on selected type (all in dB)
     if (frfType === 'mobility') {
       primaryFRF = primaryFRF.map((val, i) =>
         val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
@@ -29,7 +32,6 @@ const Results = ({ optimizationResult }) => {
         val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
       );
     }
-
 
     return {
       labels: frequencies,
@@ -98,6 +100,53 @@ const Results = ({ optimizationResult }) => {
     },
   }), [frfType]);
 
+  const renderTable = (type, label, fields) => {
+    const filtered = (optimizationResult.solution || []).filter(n => n.type === type);
+    if (filtered.length === 0) return null;
+
+    return (
+      <div className="mb-4">
+        <h5>{label}</h5>
+        <table className="table table-bordered table-sm">
+          <thead className="table-light">
+            <tr>
+              {fields.map(f => (
+                <th key={f}>{f === 'viscoelastic_material' ? 'Material Name' : f}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((n, idx) => (
+              <tr key={idx}>
+                {fields.map(f => (
+                  <td key={f}>
+                    {f === 'viscoelastic_material' && n[f] ? (
+                      <div className="tooltip-wrapper">
+                        <span className="tooltip-target">{n[f].name}</span>
+                        <div className="tooltip-content">
+                          {Object.entries(n[f])
+                            .filter(([k]) => k !== 'name')
+                            .map(([k, v]) => (
+                              <div key={k}>{k}: {v}</div>
+                            ))}
+                        </div>
+                      </div>
+                    ) : n[f] !== undefined ? (
+                      n[f]
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+
   if (!optimizationResult) {
     return <p>No optimization result yet.</p>;
   }
@@ -155,12 +204,28 @@ const Results = ({ optimizationResult }) => {
         </div>
       </div>
 
-      <button
-        className="btn btn-outline-primary mb-3"
-        onClick={() => setShowFullResponse(!showFullResponse)}
-      >
-        {showFullResponse ? 'Hide Full Response' : 'Show Full Response'}
-      </button>
+      <div className="d-flex gap-2 mb-3">
+        <button
+          className="btn btn-outline-primary"
+          onClick={() => setShowFullResponse(!showFullResponse)}
+        >
+          {showFullResponse ? 'Hide Full Response' : 'Show Full Response'}
+        </button>
+
+        <button
+          className="btn btn-outline-success"
+          onClick={() => setShowNeutralizers(!showNeutralizers)}
+        >
+          {showNeutralizers ? 'Hide Optimal Neutralizers' : 'Show Optimal Neutralizers'}
+        </button>
+        <button
+          className="btn btn-outline-warning"
+          onClick={() => setShowDimensionNeutralizers(!showDimensionNeutralizers)}
+        >
+          {showDimensionNeutralizers ? 'Hide Dimension Neutralizers' : 'Show Dimension Neutralizers'}
+        </button>
+
+      </div>
 
       {showFullResponse && (
         <div className="card mt-3">
@@ -169,6 +234,34 @@ const Results = ({ optimizationResult }) => {
           </div>
         </div>
       )}
+
+      {showNeutralizers && (
+        <div className="card mt-3">
+          <div className="card-body">
+            {renderTable(2, 'Viscous Neutralizers', [
+              'mass','modal_position', 'frequency', 'damp',
+            ])}
+            {renderTable(1, 'Viscoelastic Neutralizers', [
+              'mass',
+              'modal_position',
+              'frequency',
+              'viscoelastic_material',
+            ])}
+            {renderTable(0, 'User-defined Stiffness Neutralizers', [
+              'mass','modal_position', 'frequency', 'dynamic_stiffness',
+            ])}
+          </div>
+        </div>
+      )}
+
+      {showDimensionNeutralizers && (
+        <div className="card mt-3">
+          <div className="card-body">
+            <DimensionNeutralizers optimizationResult={optimizationResult} />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
