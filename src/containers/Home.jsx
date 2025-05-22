@@ -6,12 +6,57 @@ const MainContent = () => {
   return (
     <>
       {/* Hero Section */}
-      <div className="hero-section text-center bg-light py-5">
+      {/* <div className="hero-section text-center bg-light py-5">
         <Container>
-          <h1>LavibsND</h1>
+					<img 
+ 						src="/Petrobras.png" 
+  					alt="Petrobras Logo" 
+  					className="float-start mb-3"
+  					style={{ maxWidth: '200px' }}
+					/>
+
+					<h1>LavibsND</h1>
           <p>The ideal solution for vibration analysis and optimal neutralizer design.</p>
-        </Container>
-      </div>
+
+					<img 
+ 						src="/Lavibs_Horizontal.png" 
+  					alt="LavibsND Logo" 
+  					className="float-end mb-3"
+  					style={{ maxWidth: '200px' }}
+					/>
+
+          
+				</Container>
+      </div> */}
+
+			<div className="hero-section text-center bg-light py-5">
+				<Container>
+					<Row className="align-items-center justify-content-between">
+						<Col xs={4} className="text-start">
+							<img 
+								src="/Petrobras.png" 
+								alt="Petrobras Logo" 
+								style={{ maxWidth: '250px' }}
+							/>
+						</Col>
+						<Col xs={4}>
+							<h1>LavibsND</h1>
+						</Col>
+						<Col xs={4} className="text-end">
+							<img 
+								src="/Lavibs_Horizontal.png" 
+								alt="LavibsND Logo" 
+								style={{ maxWidth: '250px' }}
+							/>
+						</Col>
+					</Row>
+					<Row className="mt-3">
+						<Col>
+							<p>The ideal solution for vibration analysis and optimal neutralizer design.</p>
+						</Col>
+					</Row>
+				</Container>
+			</div>
 
       {/* Features Section */}
       <Container className="my-5" id="features">
