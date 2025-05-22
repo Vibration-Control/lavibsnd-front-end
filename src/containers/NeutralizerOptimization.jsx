@@ -87,15 +87,23 @@ const NeutralizerOptimization = () => {
   const { handleSubmit, setValue } = methods;
   console.log('Updated Form Values:', methods.getValues());
   const onSubmit = (data) => {
-    for (let i = 0; i < data.primarySystemModes.length; i++) {
-      data.primarySystemNaturalFrequencies[i] = data.primarySystemModes[i].naturalFrequency;
-      data.primarySystemModalDamping[i] = data.primarySystemModes[i].modalDamping;
-    }
-    delete data.primarySystemModes;
+		const naturalFrequencies = [],
+					modalDamping = [],
+					modes = [];
+
+		data.primarySystemData.rows.forEach((row) => {
+			naturalFrequencies.push(row.naturalFrequency);
+			modalDamping.push(row.modalDamping)
+		})
 
     const payload = {
-      ...data
+      ...data,
+			primarySystemNaturalFrequencies: naturalFrequencies,
+			primarySystemModalDamping: modalDamping,
+			primarySystemModes: modes
     };
+
+		delete payload.primarySystemData.rows;
 
     console.log('Saving project with payload:', payload);
     // Add your API call logic here
@@ -127,6 +135,15 @@ const NeutralizerOptimization = () => {
           const jsonData = JSON.parse(text);
 
           if (jsonData) {
+						const rows = jsonData.primarySystemNaturalFrequencies.map((element, i) => ({
+							enabled: false,
+							naturalFrequency: jsonData.primarySystemNaturalFrequencies[i],
+							modalDamping: jsonData.primarySystemModalDamping[i],
+							modes: jsonData.primarySystemModes[i] 						
+						}));
+
+						setValue('primarySystemData.rows', rows, { shouldValidate: true });
+
             Object.entries(jsonData).forEach(([key, value]) => {
               setValue(key, value, { shouldValidate: true });
             });

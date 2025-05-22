@@ -32,7 +32,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 	return (
     <div>
       <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={() => append({ checked: false, naturalFrequency: '', modalDamping: '' })}>
+        <Button variant="primary" onClick={() => append({ checked: false, naturalFrequency: '', modalDamping: '', modes: '' })}>
           Add Row
         </Button>
         <Button
