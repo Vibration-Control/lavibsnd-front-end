@@ -91,15 +91,22 @@ const NeutralizerOptimization = () => {
 					modalDamping = [],
 					modes = [];
 
+		let processingModes = '';
+
+		// primarySystemData é tratado de maneira diferente por causa da divergencia entre modos de armazenamento
 		data.primarySystemData.rows.forEach((row) => {
 			naturalFrequencies.push(row.naturalFrequency);
 			modalDamping.push(row.modalDamping)
+			// Converte a string row.modes para o formato de array de numeros
+			processingModes = row.modes.substring(1, row.modes.length-1) 
+			processingModes = processingModes.split(',').map(Number) 
+			modes.push(processingModes) 
 		})
 
     const payload = {
       ...data,
-			primarySystemNaturalFrequencies: naturalFrequencies,
-			primarySystemModalDamping: modalDamping,
+			primarySystemNaturalFrequencies: naturalFrequencies.map(Number),
+			primarySystemModalDamping: modalDamping.map(Number),
 			primarySystemModes: modes
     };
 
@@ -139,7 +146,7 @@ const NeutralizerOptimization = () => {
 							enabled: false,
 							naturalFrequency: jsonData.primarySystemNaturalFrequencies[i],
 							modalDamping: jsonData.primarySystemModalDamping[i],
-							modes: jsonData.primarySystemModes[i] 						
+							modes: JSON.stringify(jsonData.primarySystemModes[i]) 					
 						}));
 
 						setValue('primarySystemData.rows', rows, { shouldValidate: true });

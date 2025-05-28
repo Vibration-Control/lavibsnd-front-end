@@ -113,14 +113,29 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 									)}
 								/>
               </td>
-              {<td>
-                <Form.Control
-                  type="text"
-                  value={JSON.stringify(row.mode)}
-                  // onChange={(e) => handleRowChange(row.id, 'mode', e.target.value)}
-                  placeholder='e.g. [0, 1, 2]'
-                />
-              </td>}
+              <td>
+                <Controller 
+									name={`primarySystemData.rows.${index}.modes`}
+									control={control}
+									defaultValue=''
+									render={({ field, fieldState }) => (
+										<>
+											<Form.Control
+                  			{...field}
+												type="text"
+                  			//value={JSON.stringify(row.modes)}
+                  			//onChange={(e) => handleModesChange(row.id, e.target.value)}
+                  			placeholder='e.g. [0, 1, 2]'
+                			/>
+											{fieldState.error && (
+												<Form.Text className="text-danger">
+													{fieldState.error.message}
+												</Form.Text>
+											)}
+										</>
+									)}
+								/>
+              </td>
             </tr>
           ))}
         </tbody>
