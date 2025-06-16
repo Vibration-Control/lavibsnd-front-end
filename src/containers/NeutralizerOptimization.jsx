@@ -154,6 +154,7 @@ const NeutralizerOptimization = () => {
             Object.entries(jsonData).forEach(([key, value]) => {
               setValue(key, value, { shouldValidate: true });
             });
+						console.log((jsonData) || 'erro')
             console.log('Updated Form Values:', methods.getValues());
           }
         } catch (error) {
