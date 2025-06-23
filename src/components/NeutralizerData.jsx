@@ -14,30 +14,38 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 	const createEmptyNeutralizer = () => ({
 		checked: false,
-		mass: 0.0, 
-    real: [
-    	{
-      	name: "frequency",
-        lowerBound: '',
-        upperBound: '',
-        discretization: ''
-      }
-    ],
-    integer: [
-      {
-        name: "type",
-        range: []
-      },
-      {
-        name: "modal_position",
-        range: []
-      },
-      {
-        name: "viscoelastic_material",
-        range: []
-      }
-    ]
-  })
+		mass: 0.0,
+		massTypeUserDefined: true,
+		real: [
+			{
+				name: "frequency",
+				lowerBound: '',
+				upperBound: '',
+				discretization: ''
+			},
+			{
+				name: "damp",
+				lowerBound: '',
+				upperBound: '',
+				discretization: ''
+			}
+		],
+		integer: [
+			{
+				name: "type",
+				range: []
+			},
+			{
+				name: "modal_position",
+				range: []
+			},
+			{
+				name: "viscoelastic_material",
+				range: []
+			}
+		]
+	});
+
 
 	const floatRules = {
 		required: 'This field is required',
@@ -61,7 +69,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				required: false
 			};
 		}
-		
+
 		return {
 			...floatRules,
 			validate: (value) => {
@@ -69,8 +77,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 				if (!value || !upperBound)
 					return true
-	
-				return (parseFloat(upperBound) > parseFloat(value)) 
+
+				return (parseFloat(upperBound) > parseFloat(value))
 					|| 'Value must be lower than Natural Frequency Upper Bound'
 			}
 		}
@@ -82,7 +90,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				required: false
 			};
 		}
-		
+
 		return {
 			...floatRules,
 			validate: (value) => {
@@ -107,7 +115,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		return {
 			...intRules
 		}
-	}		
+	}
 
 	const getRulesDampingRatioLower = (rowIndex, isDampingEnabled) => {
 		if (!isDampingEnabled) {
@@ -254,7 +262,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			<div className="d-flex justify-content-between mb-3">
 				{/* <Button variant="primary" onClick={() => append({ checked: false, mass: '', types: [], natFreqLower: '', natFreqUpper: '', natFreqDisc: '', dampingRatioLower: '', dampingRatioUpper: '', dampingRatioDisc: '', viscoMaterial: '', dynamicStiff: '' })}> */}
 				<Button variant="primary" onClick={() => append(createEmptyNeutralizer())}>
-				
+
 					Add Neutralizer
 				</Button>
 				<Button
@@ -270,15 +278,14 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				<thead>
 					<tr>
 						<th>Select</th>
+						<th>Mass Type</th>
 						<th>Mass</th>
 						<th>Neutralizer Type</th>
 						<th>Modal Position</th>
 						<th>Natural Frequency Lower Bound</th>
 						<th>Natural Frequency Upper Bound</th>
-						<th>Natural Frequency Discretization</th>
 						<th>Damping Ratio Lower Bound</th>
 						<th>Damping Ratio Upper Bound</th>
-						<th>Damping Ratio Discretization</th>
 						<th>Viscoelastic Material</th>
 						<th>Dynamic Stiffness</th>
 					</tr>
@@ -299,6 +306,31 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										control={control}
 										defaultValue={false}
 										render={({ field }) => <Form.Check {...field} checked={field.value} />}
+									/>
+								</td>
+								<td>
+									<Controller
+										name={`neutralizers.${index}.massTypeUserDefined`}
+										control={control}
+										defaultValue={true}
+										render={({ field }) => (
+											<div>
+												<Form.Check
+													inline
+													type="radio"
+													label="User Defined"
+													checked={field.value === true}
+													onChange={() => field.onChange(true)}
+												/>
+												<Form.Check
+													inline
+													type="radio"
+													label="Mode Relationship"
+													checked={field.value === false}
+													onChange={() => field.onChange(false)}
+												/>
+											</div>
+										)}
 									/>
 								</td>
 								<td>
@@ -337,13 +369,13 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									/>
 								</td>
 								<td>
-									<Controller 
+									<Controller
 										name={`neutralizers.${index}.optimizationVariables.integer[1].range`}
 										control={control}
 										defaultValue=''
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control {...field} type="text" placeholder="[0,1,4,7]"/>
+												<Form.Control {...field} type="text" placeholder="[0,1,4,7]" />
 												{fieldState.error && (
 													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
@@ -385,22 +417,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 								</td>
 								<td>
 									<Controller
-										name={`neutralizers.${index}.optimizationVariables.real[0].discretization`}
-										control={control}
-										rules={getRulesNatFreqDiscretization(isNatFreqEnabled)}
-										defaultValue=""
-										render={({ field, fieldState }) => (
-											<>
-												<Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
-												{fieldState.error && (
-													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
-												)}
-											</>
-										)}
-									/>
-								</td>
-								<td>
-									<Controller
 										name={`neutralizers.${index}.optimizationVariables.real[1].lowerBound`}
 										control={control}
 										rules={getRulesDampingRatioLower(index, isDampingEnabled)}
@@ -420,22 +436,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										name={`neutralizers.${index}.optimizationVariables.real[1].upperBound`}
 										control={control}
 										rules={getRulesDampingRatioUpper(index, isDampingEnabled)}
-										defaultValue=""
-										render={({ field, fieldState }) => (
-											<>
-												<Form.Control {...field} type="text" disabled={!isDampingEnabled} />
-												{fieldState.error && (
-													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
-												)}
-											</>
-										)}
-									/>
-								</td>
-								<td>
-									<Controller
-										name={`neutralizers.${index}.optimizationVariables.real[1].discretization`}
-										control={control}
-										rules={getRulesDampingRatioDiscretization(isDampingEnabled)}
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>

@@ -17,6 +17,7 @@ const NeutralizerOptimization = () => {
       neutralizers: [
         {
           mass: 0.0,
+          massTypeUserDefined: true,
           optimizationVariables: {
             real: [
               {
