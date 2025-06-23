@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Controller } from 'react-hook-form'
+import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
@@ -8,7 +8,6 @@ const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
 const isothermalTemperatures = [253, 273, 293, 313, 333];
 
 Chart.register();
-
 
 const generatePowerOf10Ticks = (minPower, maxPower) => {
   const ticks = [];
@@ -24,9 +23,14 @@ const formatPowerOf10 = (value) => {
 };
 
 const ViscoelasticMaterial = ({ control, errors, getValues }) => {
-  const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [plottedRows, setPlottedRows] = useState([]);
+	const { fields, append, remove } = useFieldArray({
+		control,
+		name: 'additionalParameters.viscoelasticMaterials'
+	})
+
+	const rows = useWatch({ control, name: 'additionalParameters.viscoelasticMaterials'})
 
 	const rules = {
 		required: 'This field is required',
@@ -36,10 +40,10 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 		}
 	}
 
-	const getRulesLowerShearModulus = (rowId) => ({
+	const getRulesLowerShearModulus = (rowIndex) => ({
 		...rules,
 		validate: (value) => {
-			const upper = getValues(`neutralizerData.viscoelasticMaterial.upperShearModulus[${rowId}]`)
+			const upper = getValues(`additionalParameters.viscoelasticMaterials.${rowIndex}.upperShearModulus`)
 			
 			if (!value || !upper)
 				return true
@@ -49,10 +53,10 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 		}
 	})
 
-	const getRulesUpperShearModulus = (rowId) => ({
+	const getRulesUpperShearModulus = (rowIndex) => ({
 		...rules,
 		validate: (value) => {
-			const lower = getValues(`neutralizerData.viscoelasticMaterial.lowerShearModulus[${rowId}]`)
+			const lower = getValues(`additionalParameters.viscoelasticMaterials.${rowIndex}.lowerShearModulus`)
 
 			if (!value || !lower)
 					return true
@@ -62,37 +66,33 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 		}
 	})
 
-  const generateUniqueId = () => Date.now() + Math.random();
-
-  // Add new row function
-  const addViscoelasticMaterial = () => {
-    const newRow = {
-      id: generateUniqueId(),
-      workingTemperature: '',
-      referenceTemperature: '',
-      lowerShearModulus: '',
-      upperShearModulus: '',
-      fractionalDerivativeParameter: '',
-      temperatureShiftingFactor: '',
-      teta1: '',
-      teta2: '',
-    };
-    setRows([...rows, newRow]);
-  };
-
-  const handleInputChange = (id, field, value) => {
-    setRows(rows.map(row => row.id === id ? { ...row, [field]: value } : row));
-  };
-
-  const toggleRowSelection = (id) => {
-    setSelectedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
+	const createEmptyViscoelasticMaterial = () => ({
+		name: '',
+		TT1: '',
+		TT0: '',
+		GH: '',
+		GL: '',
+		beta: '',
+		FI: '',
+		teta1: '',
+		teta2: '',
+	})
 
   const removeSelectedRows = () => {
-    const remainingRows = rows.filter(row => !selectedRows.includes(row.id));
-    setRows(remainingRows);
-    setPlottedRows(prev => prev.filter(id => !selectedRows.includes(id)));
-    setSelectedRows([]);
+		const currentRows = (rows || [])
+
+		const indexesToRemove = currentRows
+			.map((row, index) => (row?.checked ? index : -1))
+			.filter(index => index !== -1)
+			.sort((a,b) => b - a)
+			
+    if (indexesToRemove.length === 0) 
+      return;
+
+    const idsToRemove = indexesToRemove.map(index => fields[index]?.id).filter(Boolean)
+    
+		indexesToRemove.forEach(index => remove(index))
+    setPlottedRows(prev => prev.filter(id => !idsToRemove.includes(id)))
   };
 
   const togglePlot = (id) => {
@@ -228,12 +228,12 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
       <h5>Viscoelastic Material</h5>
 
       <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={addViscoelasticMaterial}>
+        <Button variant="primary" onClick={() => append(createEmptyViscoelasticMaterial())}>
           Add Viscoelastic Material
         </Button>
         <Button
           variant="danger"
-          disabled={selectedRows.length === 0}
+          disabled={!rows?.some((row) => row.checked)}
           onClick={removeSelectedRows}
         >
           Remove Selected Rows
@@ -256,20 +256,26 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {fields.map((row, index) => {
             const isPlotted = plottedRows.includes(row.id);
             return (
               <tr key={row.id}>
                 <td>
-                  <Form.Check
-                    type="checkbox"
-                    checked={selectedRows.includes(row.id)}
-                    onChange={() => toggleRowSelection(row.id)}
+                  <Controller 
+                    name={`additionalParameters.viscoelasticMaterials.${index}.checked`}
+                    control={control}
+                    defaultValue={false}
+                    render={({ field }) => (
+                      <Form.Check 
+                        {...field}
+                        checked={field.value}
+                      />
+                    )}  
                   />
                 </td>
                 <td>
 									<Controller
-										name={`neutralizerData.viscoelasticMaterial.workingTemperature[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.TT1`}
 										control={control}
 										rules={rules}
 										defaultValue=""
@@ -291,7 +297,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
               	</td>
 								<td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.referenceTemperature[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.TT0`}
 										control={control}
 										rules={rules}
 										defaultValue=""
@@ -313,9 +319,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
               	</td>
                 <td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.lowerShearModulus[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.GL`}
 										control={control}
-										rules={getRulesLowerShearModulus(row.id)}
+										rules={getRulesLowerShearModulus(index)}
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
@@ -335,9 +341,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 								</td>
                 <td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.upperShearModulus[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.GH`}
 										control={control}
-										rules={getRulesUpperShearModulus(row.id)}
+										rules={getRulesUpperShearModulus(index)}
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
@@ -357,7 +363,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 								</td>
                 <td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.fractionalDerivativeParameter[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.FI`}
 										control={control}
 										rules={rules}
 										defaultValue=""
@@ -379,7 +385,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 								</td>
                 <td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.temperatureShiftingFactor[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.beta`}
 										control={control}
 										rules={rules}
 										defaultValue=""
@@ -401,7 +407,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 								</td>
                 <td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.teta1[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.teta1`}
 										control={control}
 										rules={rules}
 										defaultValue=""
@@ -423,7 +429,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 								</td>
                 <td>
 									<Controller 
-										name={`neutralizerData.viscoelasticMaterial.teta2[${row.id}]`}
+										name={`additionalParameters.viscoelasticMaterials.${index}.teta2`}
 										control={control}
 										rules={rules}
 										defaultValue=""

@@ -12,32 +12,40 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
   const rows = useWatch({ control, name: 'neutralizers' })
 
-  const createEmptyNeutralizer = () => ({
-    checked: false,
-    mass: 0.0, 
-    real: [
-    	{
-      	name: "frequency",
-        lowerBound: '',
-        upperBound: '',
-        discretization: ''
-      }
-    ],
-    integer: [
-      {
-        name: "type",
-        range: []
-      },
-      {
-        name: "modal_position",
-        range: []
-      },
-      {
-        name: "viscoelastic_material",
-        range: []
-      }
-    ]
-  })
+	const createEmptyNeutralizer = () => ({
+		checked: false,
+		mass: 0.0,
+		massTypeUserDefined: true,
+		real: [
+			{
+				name: "frequency",
+				lowerBound: '',
+				upperBound: '',
+				discretization: ''
+			},
+			{
+				name: "damp",
+				lowerBound: '',
+				upperBound: '',
+				discretization: ''
+			}
+		],
+		integer: [
+			{
+				name: "type",
+				range: []
+			},
+			{
+				name: "modal_position",
+				range: []
+			},
+			{
+				name: "viscoelastic_material",
+				range: []
+			}
+		]
+	});
+
 
   const floatRules = {
     required: 'This field is required',
@@ -55,38 +63,38 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
     }
   }
 
-  const getRulesNatFreqLower = (rowIndex, isNatFreqEnabled) => {
-    if (!isNatFreqEnabled) {
-      return {
-        required: false
-      };
-    }
-		
-    return {
-      ...floatRules,
-      validate: (value) => {
-        const upperBound = rows[rowIndex].natFreqUpper
+	const getRulesNatFreqLower = (rowIndex, isNatFreqEnabled) => {
+		if (!isNatFreqEnabled) {
+			return {
+				required: false
+			};
+		}
 
-        if (!value || !upperBound)
-          return true
-	
-        return (parseFloat(upperBound) >= parseFloat(value)) 
-          || 'Value must be lower than Natural Frequency Upper Bound'
-      }
-    }
-  }
+		return {
+			...floatRules,
+			validate: (value) => {
+				const upperBound = rows[rowIndex].natFreqUpper
 
-  const getRulesNatFreqUpper = (rowIndex, isNatFreqEnabled) => {
-    if (!isNatFreqEnabled) {
-      return {
-        required: false
-      };
-    }
-		
-    return {
-      ...floatRules,
-      validate: (value) => {
-        const lowerBound = rows[rowIndex].natFreqLower
+				if (!value || !upperBound)
+					return true
+
+				return (parseFloat(upperBound) > parseFloat(value))
+					|| 'Value must be lower than Natural Frequency Upper Bound'
+			}
+		}
+	}
+
+	const getRulesNatFreqUpper = (rowIndex, isNatFreqEnabled) => {
+		if (!isNatFreqEnabled) {
+			return {
+				required: false
+			};
+		}
+
+		return {
+			...floatRules,
+			validate: (value) => {
+				const lowerBound = rows[rowIndex].natFreqLower
 
         if (!value || !lowerBound)
           return true
@@ -104,10 +112,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
       };
     }
 
-    return {
-      ...intRules
-    }
-  }
+		return {
+			...intRules
+		}
+	}
 
   const getRulesDampingRatioLower = (rowIndex, isDampingEnabled) => {
     if (!isDampingEnabled) {
@@ -238,10 +246,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
     }
 
     if (!selectedValues.includes('1')) {
-      setValue(`neutralizers.${rowIndex}.viscoelasticMaterial`, '');
+      setValue(`neutralizers.${rowIndex}.optimizationVariables.integer[2].range`, '');
 
       clearErrors([
-        `neutralizers.${rowIndex}.viscoelasticMaterial`
+        `neutralizers.${rowIndex}.optimizationVariables.integer[2].range`
       ])
     }
   }
@@ -266,17 +274,16 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
         <thead>
           <tr>
             <th>Select</th>
-            <th>Mass</th>
-            <th>Neutralizer Type</th>
-            <th>Modal Position</th>
-            <th>Natural Frequency Lower Bound</th>
-            <th>Natural Frequency Upper Bound</th>
-            <th>Natural Frequency Discretization</th>
-            <th>Damping Ratio Lower Bound</th>
-            <th>Damping Ratio Upper Bound</th>
-            <th>Damping Ratio Discretization</th>
-            <th>Viscoelastic Material</th>
-            <th>Dynamic Stiffness</th>
+						<th>Mass Type</th>
+						<th>Mass</th>
+						<th>Neutralizer Type</th>
+						<th>Modal Position</th>
+						<th>Natural Frequency Lower Bound</th>
+						<th>Natural Frequency Upper Bound</th>
+						<th>Damping Ratio Lower Bound</th>
+						<th>Damping Ratio Upper Bound</th>
+						<th>Viscoelastic Material</th>
+						<th>Dynamic Stiffness</th>
           </tr>
         </thead>
         <tbody>
@@ -295,6 +302,31 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
                     control={control}
                     defaultValue={false}
                     render={({ field }) => <Form.Check {...field} checked={field.value} />}
+                  />
+                </td>
+                <td>
+                  <Controller
+                    name={`neutralizers.${index}.massTypeUserDefined`}
+                    control={control}
+                    defaultValue={true}
+                    render={({ field }) => (
+                      <div>
+                        <Form.Check
+                          inline
+                          type="radio"
+                          label="User Defined"
+                          checked={field.value === true}
+                          onChange={() => field.onChange(true)}
+                        />
+                        <Form.Check
+                          inline
+                          type="radio"
+                          label="Mode Relationship"
+                          checked={field.value === false}
+                          onChange={() => field.onChange(false)}
+                        />
+                      </div>
+                    )}
                   />
                 </td>
                 <td>
@@ -381,22 +413,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizers.${index}.optimizationVariables.real[0].discretization`}
-                    control={control}
-                    rules={getRulesNatFreqDiscretization(isNatFreqEnabled)}
-                    defaultValue=""
-                    render={({ field, fieldState }) => (
-                      <>
-                        <Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
-                        {fieldState.error && (
-                          <Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
-                        )}
-                      </>
-                    )}
-                  />
-                </td>
-                <td>
-                  <Controller
                     name={`neutralizers.${index}.optimizationVariables.real[1].lowerBound`}
                     control={control}
                     rules={getRulesDampingRatioLower(index, isDampingEnabled)}
@@ -429,23 +445,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizers.${index}.optimizationVariables.real[1].discretization`}
-                    control={control}
-                    rules={getRulesDampingRatioDiscretization(isDampingEnabled)}
-                    defaultValue=""
-                    render={({ field, fieldState }) => (
-                      <>
-                        <Form.Control {...field} type="text" disabled={!isDampingEnabled} />
-                        {fieldState.error && (
-                          <Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
-                        )}
-                      </>
-                    )}
-                  />
-                </td>
-                <td>
-                  <Controller
-                    name={`neutralizers[.${index}.viscoelasticMaterial`}
+                    name={`neutralizers.${index}.optimizationVariables.integer[2].range`}
                     control={control}
                     rules={getRulesViscoelasticMaterial(isViscoelasticEnabled)}
                     defaultValue=""

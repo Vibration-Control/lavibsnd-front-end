@@ -57,7 +57,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
           {fields.map((row, index) => (
             <tr key={row.id}>
               <td>
-								<Controller
+							  <Controller
                   name={`primarySystemData.rows.${index}.checked`}
                   control={control}
                   defaultValue={false}
