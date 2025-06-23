@@ -110,7 +110,7 @@ const NeutralizerOptimization = () => {
 			primarySystemModes: modes
     };
 
-		delete payload.primarySystemData.rows;
+		delete payload.primarySystemData;
 
     console.log('Saving project with payload:', payload);
     // Add your API call logic here
