@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Neoprene 55 Shore A (PISA)",
+    "referenceTemperature": 303.0,
+    "workingTemperature": 277.7,
+    "lowerShearModulus": 5320000.0,
+    "upperShearModulus": 148000000.0,
+    "fractionalDerivativeParameter": 0.359,
+    "temperatureShiftingFactor": 0.0054,
+    "teta1": 10.1,
+    "teta2": 137.0
+  },
+  {
+    "name": "Butílica 45 Shore A (PISA)",
+    "referenceTemperature": 303.0,
+    "workingTemperature": 273.0,
+    "lowerShearModulus": 1530000.0,
+    "upperShearModulus": 111000000.0,
+    "fractionalDerivativeParameter": 0.396,
+    "temperatureShiftingFactor": 0.0134,
+    "teta1": 15.1,
+    "teta2": 171.0
+  },
+  {
+    "name": "Borracha Butílica Pura",
+    "referenceTemperature": 303.0,
+    "workingTemperature": 273.0,
+    "lowerShearModulus": 176000.0,
+    "upperShearModulus": 241000000.0,
+    "fractionalDerivativeParameter": 0.424,
+    "temperatureShiftingFactor": 0.0045,
+    "teta1": 9.91,
+    "teta2": 119.0
+  },
+  {
+    "name": "Borracha Butílica com 20% EPDM",
+    "referenceTemperature": 303.0,
+    "workingTemperature": 273.0,
+    "lowerShearModulus": 1800000.0,
+    "upperShearModulus": 251000000.0,
+    "fractionalDerivativeParameter": 0.479,
+    "temperatureShiftingFactor": 0.000752,
+    "teta1": 5.85,
+    "teta2": 92.0
+  },
+  {
+    "name": "Neoprene",
+    "referenceTemperature": 303.0,
+    "workingTemperature": 273.0,
+    "lowerShearModulus": 4550000.0,
+    "upperShearModulus": 418000000.0,
+    "fractionalDerivativeParameter": 0.319,
+    "temperatureShiftingFactor": 0.00274,
+    "teta1": 5.09,
+    "teta2": 46.5
+  },
+  {
+    "name": "Elastômero BT 806/55",
+    "referenceTemperature": 303.0,
+    "workingTemperature": 243.0,
+    "lowerShearModulus": 2403333.3333,
+    "upperShearModulus": 152333333.33,
+    "fractionalDerivativeParameter": 0.417,
+    "temperatureShiftingFactor": 0.0223,
+    "teta1": 7.98,
+    "teta2": 81.7
+  }
+]

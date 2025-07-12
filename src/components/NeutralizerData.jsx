@@ -13,37 +13,38 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	const rows = useWatch({ control, name: 'neutralizers' })
 
 	const createEmptyNeutralizer = () => ({
-		checked: false,
 		mass: 0.0,
 		massTypeUserDefined: true,
-		real: [
-			{
-				name: "frequency",
-				lowerBound: '',
-				upperBound: '',
-				discretization: ''
-			},
-			{
-				name: "damp",
-				lowerBound: '',
-				upperBound: '',
-				discretization: ''
-			}
-		],
-		integer: [
-			{
-				name: "type",
-				range: []
-			},
-			{
-				name: "modal_position",
-				range: []
-			},
-			{
-				name: "viscoelastic_material",
-				range: []
-			}
-		]
+		optimizationVariables: {
+			real: [
+				{
+					name: "frequency",
+					lowerBound: '',
+					upperBound: '',
+					discretization: 1000
+				},
+				{
+					name: "damp",
+					lowerBound: '',
+					upperBound: '',
+					discretization: 1000
+				}
+			],
+			integer: [
+				{
+					name: "type",
+					range: []
+				},
+				{
+					name: "modal_position",
+					range: []
+				},
+				{
+					name: "viscoelastic_material",
+					range: []
+				}
+			]
+		}
 	});
 
 
@@ -218,12 +219,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		if (!selectedValues.includes('1') && !selectedValues.includes('2')) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`, '')
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`, '')
-			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].discretization`, '')
 
 			clearErrors([
 				`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`,
 				`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`,
-				`neutralizers.${rowIndex}.optimizationVariables.real[0].discretization`
 			])
 		}
 		if (!selectedValues.includes('0')) {
@@ -237,13 +236,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		if (!selectedValues.includes('2')) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].lowerBound`, '');
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].upperBound`, '');
-			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].discretization`, '');
-
 
 			clearErrors([
 				`neutralizers.${rowIndex}.optimizationVariables.real[1].lowerBound`,
 				`neutralizers.${rowIndex}.optimizationVariables.real[1].upperBound`,
-				`neutralizers.${rowIndex}.optimizationVariables.real[1].discretization`
 			]);
 		}
 
