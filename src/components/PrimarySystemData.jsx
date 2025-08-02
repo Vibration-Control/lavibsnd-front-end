@@ -1,14 +1,27 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 
-const PrimarySystemData = ({ control, errors, unregister }) => {
-	const { fields, append, remove } = useFieldArray({
+const PrimarySystemData = ({ control, setValue }) => {
+	const { fields: checkFields, append: appendCheck, remove: removeCheck } = useFieldArray({
 		control,
-		name: 'primarySystemData.rows'
+		name: 'primarySystemChecks'
 	})
 
-	const rows = useWatch({ control, name: 'primarySystemData.rows' })
+	const checks = (useWatch({ control, name:'primarySystemChecks' }) || [])
+	const naturalFrequencies = (useWatch({ control, name: 'primarySystemNaturalFrequencies'}) || [])
+	const modalDamping = (useWatch({ control, name: 'primarySystemModalDamping'}) || [])
+	const modes = (useWatch({ control, name: 'primarySystemModes'}) || [])
+
+	useEffect(() => {
+		const maxLength = Math.max(naturalFrequencies.length, modalDamping.length, modes.length)
+
+		if ((!checks) || (checks.length < maxLength)) {
+			const newChecks = Array(maxLength).fill().map((_, index) => checks?.[index] || {value: false})
+
+			setValue('primarySystemChecks', newChecks)
+		}
+	}, [checks, naturalFrequencies.length, modalDamping.length, modes.length, setValue])
 
 	const rules = {
 		required: 'This field is required',
@@ -19,26 +32,39 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 	}
 
 	const removeSelectedRows = () => {
-		const currentRows = (rows || [])
+		const newChecks = [...checks]
+		const newNaturalFrequencies = [...naturalFrequencies]
+		const newModalDamping = [...modalDamping]
+		const newModes = [...modes]
 
-		const indexesToRemove = currentRows
-			.map((row, index) => (row?.checked ? index : -1))
-			.filter(index => index !== -1)
-			.sort((a, b) => b - a);
+		const filteredChecks = newChecks.filter((_, index) => !checks[index]?.value)
+		const filteredNaturalFrequencies = newNaturalFrequencies.filter((_, index) => !checks[index]?.value)
+		const filteredModalDamping = newModalDamping.filter((_, index) => !checks[index]?.value)
+		const filteredModes = newModes.filter((_, index) => !checks[index]?.value)
 
-		indexesToRemove.forEach(index => remove(index));
+		setValue('primarySystemChecks', filteredChecks)
+		setValue('primarySystemNaturalFrequencies', filteredNaturalFrequencies)
+		setValue('primarySystemModalDamping', filteredModalDamping)
+		setValue('primarySystemModes', filteredModes)
 	};
+
+	const appendEmptyRow = () => {
+		appendCheck({value: false})
+		setValue('primarySystemNaturalFrequencies', [...naturalFrequencies, ''])
+		setValue('primarySystemModalDamping', [...modalDamping, ''])
+		setValue('primarySystemModes', [...modes, ''])
+	}
 
 	return (
 		<div>
 			<div className="d-flex justify-content-between mb-3">
-				<Button variant="primary" onClick={() => append({ checked: false, naturalFrequency: '', modalDamping: '', modes: '' })}>
+				<Button variant="primary" onClick={() => appendEmptyRow()}>
 					Add Row
 				</Button>
 				<Button
 					variant="danger"
 					onClick={removeSelectedRows}
-					disabled={!rows?.some((row) => row.checked)}
+					disabled={!checks?.some((check) => check.value)}
 				>
 					Remove Selected Rows
 				</Button>
@@ -54,11 +80,11 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 					</tr>
 				</thead>
 				<tbody>
-					{fields.map((row, index) => (
-						<tr key={row.id}>
+					{checkFields.map((checkField, index) => (
+						<tr key={checkField.id}>	
 							<td>
 								<Controller
-									name={`primarySystemData.rows.${index}.checked`}
+									name={`primarySystemChecks.${index}.value`}
 									control={control}
 									defaultValue={false}
 									render={({ field }) => (
@@ -71,7 +97,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 							</td>
 							<td>
 								<Controller
-									name={`primarySystemData.rows.${index}.naturalFrequency`}
+									name={`primarySystemNaturalFrequencies.${index}`}
 									control={control}
 									rules={rules}
 									defaultValue=''
@@ -93,7 +119,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 							</td>
 							<td>
 								<Controller
-									name={`primarySystemData.rows.${index}.modalDamping`}
+									name={`primarySystemModalDamping.${index}`}
 									control={control}
 									rules={rules}
 									defaultValue=''
@@ -115,7 +141,7 @@ const PrimarySystemData = ({ control, errors, unregister }) => {
 							</td>
 							<td>
 								<Controller
-									name={`primarySystemData.rows.${index}.modes`}
+									name={`primarySystemModes.${index}`}
 									control={control}
 									defaultValue=''
 									render={({ field, fieldState }) => (

@@ -251,7 +251,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
         <thead>
           <tr>
             <th>Select</th>
-            <th>Material Name</th> {/* NEW */}
+            <th>Material Name</th> {/* NEW */} 
             <th>Working Temperature</th>
             <th>Reference Temperature</th>
             <th>Lower Shear Modulus</th>
