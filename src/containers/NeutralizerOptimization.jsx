@@ -86,8 +86,30 @@ const NeutralizerOptimization = () => {
   });
 
   const { handleSubmit, setValue } = methods;
-  console.log('Updated Form Values:', methods.getValues());
+
+  const normalizePrimarySystemData = (data) => {
+    const normalizedNaturalFrequencies = data.primarySystemNaturalFrequencies.map(Number)
+    const normalizedModalDamping = data.primarySystemModalDamping.map(Number)
+    const normalizedModes = []
+    let processingModes
+
+    data.primarySystemNaturalFrequencies = normalizedNaturalFrequencies
+    data.primarySystemModalDamping = normalizedModalDamping
+    
+    data.primarySystemModes.forEach((mode) => {
+      if (typeof mode == 'string') {
+			  processingModes = mode.split(',').map(Number) 
+        normalizedModes.push(processingModes)
+      } else {
+        normalizedModes.push(mode)
+      }
+    })
+    data.primarySystemModes = normalizedModes
+  }
+
+  console.log('Updated Form Values: ', methods.getValues());
   const onSubmit = (data) => {
+    normalizePrimarySystemData(data)
     const payload = {
       ...data
     };
@@ -99,6 +121,8 @@ const NeutralizerOptimization = () => {
   const onOptimize = async () => {
     const formValues = methods.getValues();
     const payload = { ...formValues };
+
+    normalizePrimarySystemData(payload)
     try {
       const result = await optimizeNeutralizer(payload);
       console.log('Optimization result:', result);
@@ -107,7 +131,6 @@ const NeutralizerOptimization = () => {
       console.error('Optimization failed:', error);
     }
   };
-
 
   const openExistingProject = async () => {
     const fileInput = document.createElement('input');
