@@ -10,7 +10,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		name: 'neutralizers'
 	})
 
-	const rows = useWatch({ control, name: 'neutralizers' })
+	const neutralizerRows = useWatch({ control, name: 'neutralizers' })
 
 	const createEmptyNeutralizer = () => ({
 		mass: 0.0,
@@ -48,7 +48,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	});
 
 
-	const floatRules = {
+	const rules = {
 		required: 'This field is required',
 		pattern: {
 			value: /^\d+(\.\d+)?$/,
@@ -56,13 +56,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 	}
 
-	const intRules = {
-		required: 'This field is required',
-		pattern: {
-			value: /^[0-9]+$/,
-			message: 'Please enter a valid number'
-		}
-	}
+	const parseValue = (value) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? '' : parsed;
+  };
 
 	const getRulesNatFreqLower = (rowIndex, isNatFreqEnabled) => {
 		if (!isNatFreqEnabled) {
@@ -72,9 +69,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 
 		return {
-			...floatRules,
+			...rules,
 			validate: (value) => {
-				const upperBound = rows[rowIndex].natFreqUpper
+				const upperBound = neutralizerRows[rowIndex].natFreqUpper
 
 				if (!value || !upperBound)
 					return true
@@ -93,9 +90,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 
 		return {
-			...floatRules,
+			...rules,
 			validate: (value) => {
-				const lowerBound = rows[rowIndex].natFreqLower
+				const lowerBound = neutralizerRows[rowIndex].natFreqLower
 
 				if (!value || !lowerBound)
 					return true
@@ -103,18 +100,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				return (parseFloat(lowerBound) < parseFloat(value))
 					|| 'Value must be higher than Natural Frequency Lower Bound'
 			}
-		}
-	}
-
-	const getRulesNatFreqDiscretization = (isNatFreqEnabled) => {
-		if (!isNatFreqEnabled) {
-			return {
-				required: false
-			};
-		}
-
-		return {
-			...intRules
 		}
 	}
 
@@ -126,9 +111,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 
 		return {
-			...floatRules,
+			...rules,
 			validate: (value) => {
-				const upperBound = rows[rowIndex].dampingRatioUpper;
+				const upperBound = neutralizerRows[rowIndex].dampingRatioUpper;
 
 				if (!value || !upperBound)
 					return true;
@@ -148,9 +133,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 
 		return {
-			...floatRules,
+			...rules,
 			validate: (value) => {
-				const lowerBound = rows[rowIndex].dampingRatioLower;
+				const lowerBound = neutralizerRows[rowIndex].dampingRatioLower;
 
 				if (!value || !lowerBound)
 					return true;
@@ -160,18 +145,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			}
 		};
 	};
-
-	const getRulesDampingRatioDiscretization = (isDampingEnabled) => {
-		if (!isDampingEnabled) {
-			return {
-				required: false
-			};
-		}
-
-		return {
-			...intRules
-		}
-	}
 
 	const getRulesViscoelasticMaterial = (isViscoelasticEnabled) => {
 		if (!isViscoelasticEnabled) {
@@ -198,9 +171,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	}
 
 	const removeNeutralizers = () => {
-		const currentRows = (rows || [])
+		const currentNeutralizerRows = (neutralizerRows || [])
 
-		const indexesToRemove = currentRows
+		const indexesToRemove = currentNeutralizerRows
 			.map((row, index) => (row?.checked ? index : -1))
 			.filter(index => index !== -1)
 			.sort((a, b) => b - a);
@@ -256,14 +229,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 	return (
 		<div>
 			<div className="d-flex justify-content-between mb-3">
-				{/* <Button variant="primary" onClick={() => append({ checked: false, mass: '', types: [], natFreqLower: '', natFreqUpper: '', natFreqDisc: '', dampingRatioLower: '', dampingRatioUpper: '', dampingRatioDisc: '', viscoMaterial: '', dynamicStiff: '' })}> */}
 				<Button variant="primary" onClick={() => append(createEmptyNeutralizer())}>
-
 					Add Neutralizer
 				</Button>
 				<Button
 					variant="danger"
-					disabled={!rows?.some((row) => row.checked)}
+					disabled={!neutralizerRows?.some((row) => row.checked)}
 					onClick={removeNeutralizers}
 				>
 					Remove Neutralizers
@@ -288,7 +259,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				</thead>
 				<tbody>
 					{fields.map((row, index) => {
-						const types = rows?.[index]?.optimizationVariables.integer[0].range || [];
+						const types = neutralizerRows?.[index]?.optimizationVariables.integer[0].range || [];
 						const isNatFreqEnabled = types.includes('1') || types.includes('2');
 						const isDampingEnabled = types.includes('2');
 						const isViscoelasticEnabled = types.includes('1');
@@ -298,7 +269,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 							<tr key={row.id}>
 								<td>
 									<Controller
-										name={`neutralizers[.${index}.checked`}
+										name={`neutralizers.${index}.checked`}
 										control={control}
 										defaultValue={false}
 										render={({ field }) => <Form.Check {...field} checked={field.value} />}
@@ -333,11 +304,16 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									<Controller
 										name={`neutralizers.${index}.mass`}
 										control={control}
-										rules={floatRules}
+										rules={rules}
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control {...field} type="text" placeholder="Mass" />
+												<Form.Control 
+													{...field} 
+													type="number" 
+													placeholder="Mass"
+			                    onChange={(e) => field.onChange(parseValue(e.target.value))}
+												/>
 												{fieldState.error && (
 													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
@@ -387,7 +363,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
+												<Form.Control 
+													{...field} 
+													type="number" 
+													disabled={!isNatFreqEnabled} 
+                    			onChange={(e) => field.onChange(parseValue(e.target.value))}
+												/>
 												{fieldState.error && (
 													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
@@ -403,7 +384,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control {...field} type="text" disabled={!isNatFreqEnabled} />
+												<Form.Control 
+													{...field} 
+													type="number" 
+													disabled={!isNatFreqEnabled} 
+													onChange={(e) => field.onChange(parseValue(e.target.value))}
+												/>
 												{fieldState.error && (
 													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
@@ -419,7 +405,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control {...field} type="text" disabled={!isDampingEnabled} />
+												<Form.Control 
+													{...field}
+													type="number" 
+													disabled={!isDampingEnabled}
+													onChange={(e) => field.onChange(parseValue(e.target.value))} 
+												/>
 												{fieldState.error && (
 													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}
@@ -435,7 +426,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 										defaultValue=""
 										render={({ field, fieldState }) => (
 											<>
-												<Form.Control {...field} type="text" disabled={!isDampingEnabled} />
+												<Form.Control 
+													{...field}
+													type="text"
+													disabled={!isDampingEnabled}
+													onChange={(e) => field.onChange(parseValue(e.target.value))}
+												/>
 												{fieldState.error && (
 													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 												)}

@@ -87,16 +87,11 @@ const NeutralizerOptimization = () => {
 
   const { handleSubmit, setValue } = methods;
 
-  const normalizePrimarySystemData = (data) => {
-    const normalizedNaturalFrequencies = data.primarySystemNaturalFrequencies.map(Number)
-    const normalizedModalDamping = data.primarySystemModalDamping.map(Number)
+  const normalizePrimarySystemModes = (modes) => {
     const normalizedModes = []
     let processingModes
-
-    data.primarySystemNaturalFrequencies = normalizedNaturalFrequencies
-    data.primarySystemModalDamping = normalizedModalDamping
     
-    data.primarySystemModes.forEach((mode) => {
+    modes.forEach((mode) => {
       if (typeof mode == 'string') {
 			  processingModes = mode.split(',').map(Number) 
         normalizedModes.push(processingModes)
@@ -104,16 +99,16 @@ const NeutralizerOptimization = () => {
         normalizedModes.push(mode)
       }
     })
-    data.primarySystemModes = normalizedModes
+
+    modes = normalizedModes
+    return modes
   }
 
   console.log('Updated Form Values: ', methods.getValues());
   const onSubmit = (data) => {
-    normalizePrimarySystemData(data)
-    const payload = {
-      ...data
-    };
+    const payload = { ...data };
 
+    payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes)
     console.log('Saving project with payload:', payload)
     // Add your API call logic here
   };

@@ -31,6 +31,11 @@ const PrimarySystemData = ({ control, setValue }) => {
 		},
 	}
 
+	const parseValue = (value) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? '' : parsed;
+  };
+
 	const removeSelectedRows = () => {
 		const newChecks = [...checks]
 		const newNaturalFrequencies = [...naturalFrequencies]
@@ -105,8 +110,9 @@ const PrimarySystemData = ({ control, setValue }) => {
 										<>
 											<Form.Control
 												{...field}
-												type='text'
+												type='number'
 												placeholder='e.g. 1.0'
+												onChange={(e) => field.onChange(parseValue(e.target.value))}
 											/>
 											{fieldState.error && (
 												<Form.Text className="text-danger">
@@ -127,8 +133,9 @@ const PrimarySystemData = ({ control, setValue }) => {
 										<>
 											<Form.Control
 												{...field}
-												type='text'
+												type='number'
 												placeholder='e.g. 0.05'
+												onChange={(e) => field.onChange(parseValue(e.target.value))}
 											/>
 											{fieldState.error && (
 												<Form.Text className="text-danger">
@@ -149,8 +156,6 @@ const PrimarySystemData = ({ control, setValue }) => {
 											<Form.Control
 												{...field}
 												type="text"
-												//value={JSON.stringify(row.modes)}
-												//onChange={(e) => handleModesChange(row.id, e.target.value)}
 												placeholder='e.g. [0, 1, 2]'
 											/>
 											{fieldState.error && (
