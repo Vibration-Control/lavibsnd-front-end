@@ -117,7 +117,7 @@ const NeutralizerOptimization = () => {
     const formValues = methods.getValues();
     const payload = { ...formValues };
 
-    normalizePrimarySystemData(payload)
+    payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes)
     try {
       const result = await optimizeNeutralizer(payload);
       console.log('Optimization result:', result);
