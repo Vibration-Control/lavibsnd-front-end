@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
@@ -71,7 +70,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		return {
 			...rules,
 			validate: (value) => {
-				const upperBound = neutralizerRows[rowIndex].natFreqUpper
+				const upperBound = neutralizerRows[rowIndex].optimizationVariables.real[0].upperBound
 
 				if (!value || !upperBound)
 					return true
@@ -92,7 +91,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		return {
 			...rules,
 			validate: (value) => {
-				const lowerBound = neutralizerRows[rowIndex].natFreqLower
+				const lowerBound = neutralizerRows[rowIndex].optimizationVariables.real[0].lowerBound
 
 				if (!value || !lowerBound)
 					return true
@@ -113,7 +112,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		return {
 			...rules,
 			validate: (value) => {
-				const upperBound = neutralizerRows[rowIndex].dampingRatioUpper;
+				const upperBound = neutralizerRows[rowIndex].optimizationVariables.real[1].upperBound
 
 				if (!value || !upperBound)
 					return true;
@@ -131,11 +130,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			};
 		}
 
-
 		return {
 			...rules,
 			validate: (value) => {
-				const lowerBound = neutralizerRows[rowIndex].dampingRatioLower;
+				const lowerBound = neutralizerRows[rowIndex].optimizationVariables.real[1].lowerBound 
 
 				if (!value || !lowerBound)
 					return true;
@@ -170,7 +168,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 	}
 
-	const removeNeutralizers = () => {
+	const removeSelectedNeutralizers = () => {
 		const currentNeutralizerRows = (neutralizerRows || [])
 
 		const indexesToRemove = currentNeutralizerRows
@@ -235,7 +233,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				<Button
 					variant="danger"
 					disabled={!neutralizerRows?.some((row) => row.checked)}
-					onClick={removeNeutralizers}
+					onClick={removeSelectedNeutralizers}
 				>
 					Remove Neutralizers
 				</Button>
@@ -428,7 +426,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 											<>
 												<Form.Control 
 													{...field}
-													type="text"
+													type="number"
 													disabled={!isDampingEnabled}
 													onChange={(e) => field.onChange(parseValue(e.target.value))}
 												/>

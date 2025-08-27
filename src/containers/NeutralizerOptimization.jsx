@@ -6,6 +6,7 @@ import NeutralizerData from '../components/NeutralizerData';
 import CalculationParameters from '../components/CalculationParameters';
 import Results from '../components/Results';
 import { optimizeNeutralizer } from '../services/apiService';
+import initialMaterials from '../Data/ViscoelasticMaterials.json';
 
 const NeutralizerOptimization = () => {
   const [optimizationResult, setOptimizationResult] = useState(null);
@@ -45,19 +46,7 @@ const NeutralizerOptimization = () => {
         }
       ],
       additionalParameters: {
-        viscoelasticMaterials: [
-          {
-            name: '',
-            TT1: '',
-            TT0: '',
-            GH: '',
-            GL: '',
-            beta: '',
-            FI: '',
-            teta1: '',
-            teta2: ''
-          }
-        ],
+        viscoelasticMaterials: initialMaterials,
         userDefinedDynamicStiffnesses: [
           {
             name: '',
@@ -132,6 +121,8 @@ const NeutralizerOptimization = () => {
     fileInput.type = 'file';
     fileInput.accept = 'application/json';
 
+    const currentViscoelasticMaterials = (methods.getValues().additionalParameters.viscoelasticMaterials || []) // temporary logic
+
     fileInput.onchange = async (event) => {
       const file = event.target.files[0];
       if (file) {
@@ -146,6 +137,9 @@ const NeutralizerOptimization = () => {
 						console.log((jsonData) || 'erro')
             console.log('Updated Form Values:', methods.getValues());
           }
+
+          const newViscoelasticMaterials = (jsonData.additionalParameters?.viscoelasticMaterials || []) // temporary logic
+          setValue('additionalParameters.viscoelasticMaterials', [...currentViscoelasticMaterials, ...newViscoelasticMaterials]) // temporary logic
         } catch (error) {
           console.error('Error reading or parsing the file:', error);
         }

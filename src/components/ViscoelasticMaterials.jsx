@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Controller } from 'react-hook-form'
+import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
@@ -25,14 +25,13 @@ const formatPowerOf10 = (value) => {
 
 const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 
-  const initialRows = initialMaterials.map(item => ({
-    ...item,
-    id: Date.now() + Math.random()  // Unique id for each row
-  }));
+  const { fields, append, remove } = useFieldArray({ 
+    control,
+    name: 'additionalParameters.viscoelasticMaterials'
+  })
 
-  const [rows, setRows] = useState(initialRows);
-  const [selectedRows, setSelectedRows] = useState([]);
   const [plottedRows, setPlottedRows] = useState([]);
+  const viscoelasticMaterialRows = useWatch({ control, name: 'additionalParameters.viscoelasticMaterials' })
 
   const rules = {
     required: 'This field is required',
@@ -42,65 +41,60 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     }
   }
 
-  const getRulesLowerShearModulus = (rowId) => ({
+  const parseValue = (value) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? '' : parsed;
+  };
+
+  const getRulesLowerShearModulus = (rowIndex) => ({
     ...rules,
     validate: (value) => {
-      const upper = getValues(`neutralizerData.viscoelasticMaterial.upperShearModulus[${rowId}]`)
+      const upperBound = viscoelasticMaterialRows[rowIndex].upperShearModulus
       
-      if (!value || !upper)
+      if (!value || !upperBound)
         return true
 
-      return (parseFloat(value) < parseFloat(upper)) 
+      return (parseFloat(value) < parseFloat(upperBound)) 
         || 'Value must be lower than Upper Shear Modulus'
     }
   })
 
-  const getRulesUpperShearModulus = (rowId) => ({
+  const getRulesUpperShearModulus = (rowIndex) => ({
     ...rules,
     validate: (value) => {
-      const lower = getValues(`neutralizerData.viscoelasticMaterial.lowerShearModulus[${rowId}]`)
+      const lowerBound = viscoelasticMaterialRows[rowIndex].lowerShearModulus
 
-      if (!value || !lower)
+      if (!value || !lowerBound)
           return true
 
-      return (parseFloat(lower) < parseFloat(value)) 
+      return (parseFloat(lowerBound) < parseFloat(value)) 
         || 'Value must be higher than Lower Shear Modulus'
     }
   })
 
-  const generateUniqueId = () => Date.now() + Math.random();
+  const createEmptyViscoelasticMaterial = () => ({
+    checked: false,
+    name: '',
+    workingTemperature: '',
+    referenceTemperature: '',
+    lowerShearModulus: '',
+    upperShearModulus: '',
+    fractionalDerivativeParameter: '',
+    temperatureShiftingFactor: '',
+    teta1: '',
+    teta2: '',
+  })
 
-  // Add new row function
-  const addViscoelasticMaterial = () => {
-    const newRow = {
-      id: generateUniqueId(),
-      name: '',  // NEW field
-      workingTemperature: '',
-      referenceTemperature: '',
-      lowerShearModulus: '',
-      upperShearModulus: '',
-      fractionalDerivativeParameter: '',
-      temperatureShiftingFactor: '',
-      teta1: '',
-      teta2: '',
-    };
-    setRows([...rows, newRow]);
-  };
+  const removeSelectedViscoelasticMaterials = () => {
+    const currentViscoelasticMaterialRows = (viscoelasticMaterialRows || [])
 
-  const handleInputChange = (id, field, value) => {
-    setRows(rows.map(row => row.id === id ? { ...row, [field]: value } : row));
-  };
+    const indexesToRemove = currentViscoelasticMaterialRows
+			.map((row, index) => (row?.checked ? index : -1))
+			.filter(index => index !== -1)
+			.sort((a, b) => b - a);
 
-  const toggleRowSelection = (id) => {
-    setSelectedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const removeSelectedRows = () => {
-    const remainingRows = rows.filter(row => !selectedRows.includes(row.id));
-    setRows(remainingRows);
-    setPlottedRows(prev => prev.filter(id => !selectedRows.includes(id)));
-    setSelectedRows([]);
-  };
+		indexesToRemove.forEach(index => remove(index))
+  }
 
   const togglePlot = (id) => {
     setPlottedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -177,7 +171,8 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 
   const chartData = {
     datasets: plottedRows.flatMap((rowId, index) => {
-      const row = rows.find(r => r.id === rowId);
+      // const row = rows.find(r => r.id === rowId);
+      const row = fields.find(r => r.id === rowId);
       if (!row) return [];
       const materialData = generateNomogramData(row);
       if (!materialData) return [];
@@ -234,14 +229,15 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     <div>
       <h5>Viscoelastic Material</h5>
 
-      <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={addViscoelasticMaterial}>
+      <div className="d-flex justify-content-between mb-3"> 
+        {console.log('dados dentro de viscoelastic: ', viscoelasticMaterialRows)}
+        <Button variant="primary" onClick={() => append(createEmptyViscoelasticMaterial())}>
           Add Viscoelastic Material
         </Button>
         <Button
           variant="danger"
-          disabled={selectedRows.length === 0}
-          onClick={removeSelectedRows}
+          disabled={!viscoelasticMaterialRows?.some((row) => row.checked)}
+          onClick={removeSelectedViscoelasticMaterials}
         >
           Remove Selected Rows
         </Button>
@@ -251,7 +247,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
         <thead>
           <tr>
             <th>Select</th>
-            <th>Material Name</th> {/* NEW */} 
+            <th>Material Name</th> 
             <th>Working Temperature</th>
             <th>Reference Temperature</th>
             <th>Lower Shear Modulus</th>
@@ -264,22 +260,23 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {fields.map((row, index) => {
             const isPlotted = plottedRows.includes(row.id);
             return (
               <tr key={row.id}>
                 <td>
-                  <Form.Check
-                    type="checkbox"
-                    checked={selectedRows.includes(row.id)}
-                    onChange={() => toggleRowSelection(row.id)}
+                  <Controller
+                    name={`additionalParameters.viscoelasticMaterials.${index}.checked`}
+                    control={control}
+                    defaultValue={false}
+                    render={({ field }) => <Form.Check {...field} checked={field.value} />}
                   />
                 </td>
 
                 {/* Material Name input */}
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.name[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.name`}
                     control={control}
                     rules={{ required: 'Material name is required' }}
                     defaultValue={row.name || ''}
@@ -289,10 +286,6 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                           {...field}
                           type="text"
                           placeholder="Enter material name"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'name', e.target.value);
-                          }}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -306,7 +299,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.workingTemperature[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.workingTemperature`}
                     control={control}
                     rules={rules}
                     defaultValue={row.workingTemperature}
@@ -314,12 +307,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter working temperature"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'workingTemperature', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -332,7 +322,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.referenceTemperature[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.referenceTemperature`}
                     control={control}
                     rules={rules}
                     defaultValue={row.referenceTemperature}
@@ -340,12 +330,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter reference temperature"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'referenceTemperature', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -358,20 +345,17 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.lowerShearModulus[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.lowerShearModulus`}
                     control={control}
-                    rules={getRulesLowerShearModulus(row.id)}
+                    rules={getRulesLowerShearModulus(index)}
                     defaultValue={row.lowerShearModulus}
                     render={({ field, fieldState }) => (
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter lower shear modulus"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'lowerShearModulus', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -384,20 +368,17 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.upperShearModulus[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.upperShearModulus`}
                     control={control}
-                    rules={getRulesUpperShearModulus(row.id)}
+                    rules={getRulesUpperShearModulus(index)}
                     defaultValue={row.upperShearModulus}
                     render={({ field, fieldState }) => (
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter upper shear modulus"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'upperShearModulus', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -410,7 +391,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.fractionalDerivativeParameter[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.fractionalDerivativeParameter`}
                     control={control}
                     rules={rules}
                     defaultValue={row.fractionalDerivativeParameter}
@@ -418,12 +399,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter fractional derivative parameter"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'fractionalDerivativeParameter', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -436,7 +414,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.temperatureShiftingFactor[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.temperatureShiftingFactor`}
                     control={control}
                     rules={rules}
                     defaultValue={row.temperatureShiftingFactor}
@@ -444,12 +422,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter temperature shifting factor"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'temperatureShiftingFactor', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -462,7 +437,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.teta1[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.teta1`}
                     control={control}
                     rules={rules}
                     defaultValue={row.teta1}
@@ -470,12 +445,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter Teta 1"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'teta1', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
@@ -488,7 +460,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                 </td>
                 <td>
                   <Controller
-                    name={`neutralizerData.viscoelasticMaterial.teta2[${row.id}]`}
+                    name={`additionalParameters.viscoelasticMaterials.${index}.teta2`}
                     control={control}
                     rules={rules}
                     defaultValue={row.teta2}
@@ -496,12 +468,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                       <>
                         <Form.Control
                           {...field}
-                          type="text"
+                          type="number"
                           placeholder="Enter Teta 2"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleInputChange(row.id, 'teta2', e.target.value);
-                          }}
+                          onChange={(e) => field.onChange(parseValue(e.target.value))}
                         />
                         {fieldState.error && (
                           <Form.Text className="text-danger">
