@@ -46,6 +46,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 	});
 
+	const parseValue = (value) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? '' : parsed;
+  };
 
 	const rules = {
 		required: 'This field is required',
@@ -54,11 +58,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			message: 'Please enter a valid number'
 		}
 	}
-
-	const parseValue = (value) => {
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? '' : parsed;
-  };
 
 	const getRulesNatFreqLower = (rowIndex, isNatFreqEnabled) => {
 		if (!isNatFreqEnabled) {
@@ -320,18 +319,24 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									<Controller
 										name={`neutralizers.${index}.optimizationVariables.integer[0].range`}
 										control={control}
-										defaultValue={['0']}
-										render={({ field }) => (
-											<Form.Control
-												as="select"
-												multiple
-												value={field.value}
-												onChange={(e) => handleTypeChange(e, field.onChange, index)}
-											>
-												<option value="0">User Defined Dynamic Stiffness</option>
-												<option value="1">Viscoelastic</option>
-												<option value="2">Viscous</option>
-											</Form.Control>
+										rules={rules}
+										defaultValue='[0]'
+										render={({ field, fieldState }) => (
+											<>
+												<Form.Control
+													as="select"
+													multiple
+													value={field.value}
+													onChange={(e) => handleTypeChange(e, field.onChange, index)}
+												>
+													<option value="0">User Defined Dynamic Stiffness</option>
+													<option value="1">Viscoelastic</option>
+													<option value="2">Viscous</option>
+												</Form.Control>
+												{fieldState.error && (
+													<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
+												)}
+											</>
 										)}
 									/>
 								</td>
