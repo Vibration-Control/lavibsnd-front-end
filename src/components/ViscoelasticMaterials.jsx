@@ -230,7 +230,6 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
       <h5>Viscoelastic Material</h5>
 
       <div className="d-flex justify-content-between mb-3"> 
-        {console.log('dados dentro de viscoelastic: ', viscoelasticMaterialRows)}
         <Button variant="primary" onClick={() => append(createEmptyViscoelasticMaterial())}>
           Add Viscoelastic Material
         </Button>

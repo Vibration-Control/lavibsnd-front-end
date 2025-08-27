@@ -190,15 +190,14 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		if (!selectedValues.includes('1') && !selectedValues.includes('2')) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`, '')
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`, '')
-
 			clearErrors([
 				`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`,
 				`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`,
 			])
 		}
+
 		if (!selectedValues.includes('0')) {
 			setValue(`neutralizers.${rowIndex}.dynamicStiffness`, '')
-
 			clearErrors([
 				`neutralizers.${rowIndex}.dynamicStiffness`
 			])
@@ -207,7 +206,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		if (!selectedValues.includes('2')) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].lowerBound`, '');
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].upperBound`, '');
-
 			clearErrors([
 				`neutralizers.${rowIndex}.optimizationVariables.real[1].lowerBound`,
 				`neutralizers.${rowIndex}.optimizationVariables.real[1].upperBound`,
@@ -216,7 +214,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 		if (!selectedValues.includes('1')) {
 			setValue(`neutralizers[.${rowIndex}.viscoelasticMaterial`, '');
-
 			clearErrors([
 				`neutralizers[.${rowIndex}.viscoelasticMaterial`
 			])
