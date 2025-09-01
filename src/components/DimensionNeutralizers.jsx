@@ -5,19 +5,19 @@ const math = create(all);
 const DimensionNeutralizers = ({ optimizationResult }) => {
   const viscoelasticNeutralizers = (optimizationResult.solution || []).filter(n => n.type === 1);
 
-  const calculateAlfa = (TT0, TT1, teta1, teta2) => {
-    const deltaT = TT1 - TT0;
+  const calculateAlfa = (referenceTemperature, workingTemperature, teta1, teta2) => {
+    const deltaT = workingTemperature - referenceTemperature;
     return 10 ** (-teta1 * deltaT / (teta2 + deltaT));
   };
 
   const calculateGwa = (neutralizer) => {
     try {
       const { viscoelastic_material, frequency } = neutralizer;
-      const { GL, GH, FI, TT0, TT1, teta1, teta2, beta } = viscoelastic_material;
+      const { lowerShearModulus, upperShearModulus, temperatureShiftingFactor, referenceTemperature, workingTemperature, teta1, teta2, fractionalDerivativeParameter } = viscoelastic_material;
 
       console.log(viscoelastic_material)
 
-      const alfa = calculateAlfa(TT0, TT1, teta1, teta2);
+      const alfa = calculateAlfa(referenceTemperature, workingTemperature, teta1, teta2);
       const w = 2 * Math.PI * frequency;
 
       console.log(frequency)
@@ -25,10 +25,10 @@ const DimensionNeutralizers = ({ optimizationResult }) => {
       console.log(w)
 
       const jw = math.multiply(math.complex(0, 1), alfa * w);
-      const jw_beta = math.pow(jw, beta);
+      const jw_fractionalDerivativeParameter = math.pow(jw, fractionalDerivativeParameter);
 
-      const numerator = math.add(GL, math.multiply(GH * FI, jw_beta));
-      const denominator = math.add(1, math.multiply(FI, jw_beta));
+      const numerator = math.add(lowerShearModulus, math.multiply(upperShearModulus * temperatureShiftingFactor, jw_fractionalDerivativeParameter));
+      const denominator = math.add(1, math.multiply(temperatureShiftingFactor, jw_fractionalDerivativeParameter));
 
       console.log(numerator)
       console.log(denominator)
