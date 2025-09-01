@@ -47,6 +47,7 @@ const NeutralizerOptimization = () => {
       ],
       additionalParameters: {
         viscoelasticMaterials: initialMaterials,
+        temperatureDetuning: [],
         userDefinedDynamicStiffnesses: [
           {
             name: '',

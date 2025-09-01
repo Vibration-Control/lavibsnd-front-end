@@ -1,6 +1,7 @@
 import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
+import TemperatureDetuning from './TemperatureDetuning';
 import DynamicStiffness from './DynamicStiffness';
 
 const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) => {
@@ -489,6 +490,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
+			<TemperatureDetuning control={control} errors={errors} getValues={getValues} />
 			<DynamicStiffness />
 		</div>
 	);

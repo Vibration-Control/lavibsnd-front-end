@@ -10,53 +10,91 @@ const Results = ({ optimizationResult }) => {
   const [showDimensionNeutralizers, setShowDimensionNeutralizers] = useState(false);
 
 
-  const chartData = useMemo(() => {
-    if (!optimizationResult) return null;
+const chartData = useMemo(() => {
+  if (!optimizationResult) return null;
 
-    const frequencies = optimizationResult.frequency;
-    let primaryFRF = optimizationResult.primary_system_frf;
-    let composedFRF = optimizationResult.composed_system_frf;
+  const frequencies = optimizationResult.frequency;
+  let primaryFRF = optimizationResult.primary_system_frf;
+  let composedFRF = optimizationResult.composed_system_frf;
 
-    if (frfType === 'mobility') {
-      primaryFRF = primaryFRF.map((val, i) =>
-        val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-      );
-      composedFRF = composedFRF.map((val, i) =>
-        val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-      );
-    } else if (frfType === 'inertance') {
-      primaryFRF = primaryFRF.map((val, i) =>
-        val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-      );
-      composedFRF = composedFRF.map((val, i) =>
-        val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-      );
-    }
+  if (frfType === 'mobility') {
+    primaryFRF = primaryFRF.map((val, i) =>
+      val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+    );
+    composedFRF = composedFRF.map((val, i) =>
+      val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+    );
+  } else if (frfType === 'inertance') { 
+    primaryFRF = primaryFRF.map((val, i) =>
+      val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+    );
+    composedFRF = composedFRF.map((val, i) =>
+      val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+    );
+  }
 
-    return {
-      labels: frequencies,
-      datasets: [
-        {
-          label: 'Primary System',
-          data: primaryFRF,
-          borderColor: 'rgba(75,192,192,1)',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.2,
-          pointRadius: 0,
-        },
-        {
-          label: 'Composed System',
-          data: composedFRF,
-          borderColor: 'rgba(153,102,255,1)',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.2,
-          pointRadius: 0,
-        },
-      ],
-    };
-  }, [optimizationResult, frfType]);
+  // Main datasets
+  const datasets = [
+    {
+      label: 'Primary System',
+      data: primaryFRF,
+      borderColor: 'rgba(75,192,192,1)',
+      borderWidth: 2,
+      fill: false,
+      tension: 0.2,
+      pointRadius: 0,
+    },
+    {
+      label: 'Composed System',
+      data: composedFRF,
+      borderColor: 'rgba(153,102,255,1)',
+      borderWidth: 2,
+      fill: false,
+      tension: 0.2,
+      pointRadius: 0,
+    },
+  ];
+
+  // Add detuned receptances with visually distinct colors
+  if (optimizationResult.receptances_with_detuning) {
+    const n = optimizationResult.receptances_with_detuning.length;
+    optimizationResult.receptances_with_detuning.forEach((item, idx) => {
+      let detunedFRF = item.receptance;
+
+      // Apply mobility/inertance conversion if needed
+      if (frfType === 'mobility') {
+        detunedFRF = detunedFRF.map((val, i) =>
+          val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+        );
+      } else if (frfType === 'inertance') {
+        detunedFRF = detunedFRF.map((val, i) =>
+          val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+        );
+      }
+
+      // Generate a distinct HSL color
+      const hue = Math.round((idx / n) * 360); // evenly spaced hue
+      const color = `hsl(${hue}, 80%, 50%)`;
+
+      datasets.push({
+        label: `Composed System detuned at ${item.temperature} K`,
+        data: detunedFRF,
+        borderColor: color,
+        borderWidth: 2,
+        fill: false,
+        tension: 0.2,
+        pointRadius: 0,
+        borderDash: [5, 5],
+      });
+    });
+  }
+
+  return {
+    labels: frequencies,
+    datasets,
+  };
+}, [optimizationResult, frfType]);
+
 
   const chartOptions = useMemo(() => ({
     responsive: true,
