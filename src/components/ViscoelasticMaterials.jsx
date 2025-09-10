@@ -85,7 +85,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     teta2: '',
   })
 
-  const removeSelectedViscoelasticMaterials = () => {
+  const removeSelectedRows = () => {
     const currentViscoelasticMaterialRows = (viscoelasticMaterialRows || [])
 
     const indexesToRemove = currentViscoelasticMaterialRows
@@ -171,7 +171,6 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 
   const chartData = {
     datasets: plottedRows.flatMap((rowId, index) => {
-      // const row = rows.find(r => r.id === rowId);
       const row = fields.find(r => r.id === rowId);
       if (!row) return [];
       const materialData = generateNomogramData(row);
@@ -236,7 +235,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
         <Button
           variant="danger"
           disabled={!viscoelasticMaterialRows?.some((row) => row.checked)}
-          onClick={removeSelectedViscoelasticMaterials}
+          onClick={removeSelectedRows}
         >
           Remove Selected Rows
         </Button>

@@ -1,4 +1,4 @@
-import { Controller, useFieldArray, useWatch } from 'react-hook-form'
+import { Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { Table, Button, Form } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
 import TemperatureDetuning from './TemperatureDetuning';
@@ -9,7 +9,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		control,
 		name: 'neutralizers'
 	})
-
 	const neutralizerRows = useWatch({ control, name: 'neutralizers' })
 
 	const createEmptyNeutralizer = () => ({
@@ -168,7 +167,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		}
 	}
 
-	const removeSelectedNeutralizers = () => {
+	const removeSelectedRows = () => {
 		const currentNeutralizerRows = (neutralizerRows || [])
 
 		const indexesToRemove = currentNeutralizerRows
@@ -230,7 +229,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				<Button
 					variant="danger"
 					disabled={!neutralizerRows?.some((row) => row.checked)}
-					onClick={removeSelectedNeutralizers}
+					onClick={removeSelectedRows}
 				>
 					Remove Neutralizers
 				</Button>
@@ -442,7 +441,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 								</td>
 								<td>
 									<Controller
-										name={`neutralizers[.${index}.viscoelasticMaterial`}
+										name={`neutralizers.${index}.viscoelasticMaterial`}
 										control={control}
 										rules={getRulesViscoelasticMaterial(isViscoelasticEnabled)}
 										defaultValue=""
@@ -463,7 +462,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 								</td>
 								<td>
 									<Controller
-										name={`neutralizers[.${index}.dynamicStiffness`}
+										name={`neutralizers.${index}.dynamicStiffness`}
 										control={control}
 										rules={getRulesDynamicStiffness(isDynamicStiffnessEnabled)}
 										defaultValue=""
@@ -491,7 +490,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
 			<TemperatureDetuning control={control} errors={errors} getValues={getValues} />
-			<DynamicStiffness />
+			<DynamicStiffness control={control} setValue={setValue} getValues={getValues}/>
 		</div>
 	);
 };

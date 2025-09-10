@@ -132,15 +132,19 @@ const NeutralizerOptimization = () => {
           const jsonData = JSON.parse(text);
 
           if (jsonData) {
-            Object.entries(jsonData).forEach(([key, value]) => {
-              setValue(key, value, { shouldValidate: true });
-            });
-						console.log((jsonData) || 'erro')
-            console.log('Updated Form Values:', methods.getValues());
-          }
+            const newViscoelasticMaterials = (jsonData.additionalParameters?.viscoelasticMaterials || []) // temporary logic
+            const mergedForm = {
+              ...jsonData,
+              additionalParameters: {
+                ...(jsonData.additionalParameters || {}),
+                viscoelasticMaterials: [...currentViscoelasticMaterials, ...newViscoelasticMaterials]
+              }
+            }
 
-          const newViscoelasticMaterials = (jsonData.additionalParameters?.viscoelasticMaterials || []) // temporary logic
-          setValue('additionalParameters.viscoelasticMaterials', [...currentViscoelasticMaterials, ...newViscoelasticMaterials]) // temporary logic
+            methods.reset(mergedForm)
+						console.log((mergedForm) || 'erro')
+            console.log('Updated Form Values:', methods.getValues());
+          }          
         } catch (error) {
           console.error('Error reading or parsing the file:', error);
         }
