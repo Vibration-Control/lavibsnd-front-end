@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { Table, Button, Form } from 'react-bootstrap';
 
-const TemperatureDetuning = ({ control, errors, getValues }) => {
+const TemperatureDetuning = ({ control, setValue }) => {
+  // Local state for selected rows
+  const [selectedRows, setSelectedRows] = useState([]);
 
-  const { fields, append, remove } = useFieldArray({
+  // Watch the array from the form
+  const temperatures = useWatch({
+    control,
+    name: 'additionalParameters.temperatureDetuning',
+  }) || [];
+
+  const { append, remove } = useFieldArray({
     control,
     name: 'additionalParameters.temperatureDetuning',
   });
-
-  const temperatureRows = useWatch({ control, name: 'additionalParameters.temperatureDetuning' });
 
   const rules = {
     required: 'This field is required',
@@ -24,15 +30,21 @@ const TemperatureDetuning = ({ control, errors, getValues }) => {
     return isNaN(parsed) ? '' : parsed;
   };
 
-  const createEmptyTemperature = () => ({ value: '' });
+  const appendEmptyRow = () => {
+    append('');
+  };
 
   const removeSelectedTemperatures = () => {
-    const indexesToRemove = temperatureRows
-      .map((row, index) => (row?.checked ? index : -1))
-      .filter(index => index !== -1)
-      .sort((a, b) => b - a);
+    [...selectedRows]
+      .sort((a, b) => b - a)
+      .forEach((index) => remove(index));
+    setSelectedRows([]);
+  };
 
-    indexesToRemove.forEach(index => remove(index));
+  const toggleRowSelection = (index) => {
+    setSelectedRows((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
   };
 
   return (
@@ -40,12 +52,12 @@ const TemperatureDetuning = ({ control, errors, getValues }) => {
       <h5>Temperature Detuning</h5>
 
       <div className="d-flex justify-content-between mb-3">
-        <Button variant="primary" onClick={() => append(createEmptyTemperature())}>
+        <Button variant="primary" onClick={appendEmptyRow}>
           Add Temperature
         </Button>
         <Button
           variant="danger"
-          disabled={!temperatureRows?.some((row) => row.checked)}
+          disabled={selectedRows.length === 0}
           onClick={removeSelectedTemperatures}
         >
           Remove Selected
@@ -61,22 +73,21 @@ const TemperatureDetuning = ({ control, errors, getValues }) => {
           </tr>
         </thead>
         <tbody>
-          {fields.map((row, index) => (
-            <tr key={row.id}>
+          {temperatures.map((value, index) => (
+            <tr key={index}>
               <td>
-                <Controller
-                  name={`additionalParameters.temperatureDetuning.${index}.checked`}
-                  control={control}
-                  defaultValue={false}
-                  render={({ field }) => <Form.Check {...field} checked={field.value} />}
+                <Form.Check
+                  type="checkbox"
+                  checked={selectedRows.includes(index)}
+                  onChange={() => toggleRowSelection(index)}
                 />
               </td>
               <td>
                 <Controller
-                  name={`additionalParameters.temperatureDetuning.${index}.value`}
+                  name={`additionalParameters.temperatureDetuning.${index}`}
                   control={control}
                   rules={rules}
-                  defaultValue={row.value || ''}
+                  defaultValue={value || ''}
                   render={({ field, fieldState }) => (
                     <>
                       <Form.Control
@@ -95,7 +106,15 @@ const TemperatureDetuning = ({ control, errors, getValues }) => {
                 />
               </td>
               <td>
-                <Button variant="danger" onClick={() => remove(index)}>Remove</Button>
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    remove(index);
+                    setSelectedRows((prev) => prev.filter((i) => i !== index));
+                  }}
+                >
+                  Remove
+                </Button>
               </td>
             </tr>
           ))}

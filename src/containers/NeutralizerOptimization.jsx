@@ -25,7 +25,7 @@ const NeutralizerOptimization = () => {
                 name: "frequency",
                 lowerBound: '',
                 upperBound: '',
-                discretization: ''
+                discretization: 1000
               }
             ],
             integer: [
@@ -80,10 +80,10 @@ const NeutralizerOptimization = () => {
   const normalizePrimarySystemModes = (modes) => {
     const normalizedModes = []
     let processingModes
-    
+
     modes.forEach((mode) => {
       if (typeof mode == 'string') {
-			  processingModes = mode.split(',').map(Number) 
+        processingModes = mode.split(',').map(Number)
         normalizedModes.push(processingModes)
       } else {
         normalizedModes.push(mode)
@@ -132,19 +132,15 @@ const NeutralizerOptimization = () => {
           const jsonData = JSON.parse(text);
 
           if (jsonData) {
-            const newViscoelasticMaterials = (jsonData.additionalParameters?.viscoelasticMaterials || []) // temporary logic
-            const mergedForm = {
-              ...jsonData,
-              additionalParameters: {
-                ...(jsonData.additionalParameters || {}),
-                viscoelasticMaterials: [...currentViscoelasticMaterials, ...newViscoelasticMaterials]
-              }
-            }
-
-            methods.reset(mergedForm)
-						console.log((mergedForm) || 'erro')
+            Object.entries(jsonData).forEach(([key, value]) => {
+              setValue(key, value, { shouldValidate: true });
+            });
+						console.log((jsonData) || 'erro')
             console.log('Updated Form Values:', methods.getValues());
-          }          
+          }
+
+          const newViscoelasticMaterials = (jsonData.additionalParameters?.viscoelasticMaterials || []) // temporary logic
+          setValue('additionalParameters.viscoelasticMaterials', [...currentViscoelasticMaterials, ...newViscoelasticMaterials]) // temporary logic
         } catch (error) {
           console.error('Error reading or parsing the file:', error);
         }
@@ -173,7 +169,7 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="0">
             <Accordion.Header>Primary System Data</Accordion.Header>
             <Accordion.Body>
-              <PrimarySystemData control={methods.control} setValue={methods.setValue}/>
+              <PrimarySystemData control={methods.control} setValue={methods.setValue} />
             </Accordion.Body>
           </Accordion.Item>
 

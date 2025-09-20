@@ -489,7 +489,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
-			<TemperatureDetuning control={control} errors={errors} getValues={getValues} />
+			<TemperatureDetuning control={control} setValue={setValue} />
 			<DynamicStiffness control={control} setValue={setValue} getValues={getValues}/>
 		</div>
 	);
