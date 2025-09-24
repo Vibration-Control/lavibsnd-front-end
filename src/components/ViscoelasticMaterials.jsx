@@ -93,7 +93,14 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 			.filter(index => index !== -1)
 			.sort((a, b) => b - a);
 
-		indexesToRemove.forEach(index => remove(index))
+		indexesToRemove.forEach(index => {
+      const id = fields[index].id
+      
+      remove(index)
+      if (plottedRows.includes(id)) {
+        setPlottedRows(prev => prev.filter(i => i !== id))
+      }
+    })
   }
 
   const togglePlot = (id) => {

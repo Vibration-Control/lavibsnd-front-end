@@ -18,19 +18,19 @@ const DynamicStiffness = ({ control }) => {
     range: '',
   });
 
-  const verifyIfIsPlotted = (id) => {
-    return plottedRows.some(rowData => rowData.id === id);
+  const isRowPlotted = (rowId) => {
+    return plottedRows.some(rowData => rowData.id === rowId);
   }
 
-  const togglePlot = (id) => {
-    const isCurrentlyPlotted = verifyIfIsPlotted(id)
-    const index = fields.findIndex(row => row.id === id);
+  const togglePlot = (rowId) => {
+    const isCurrentlyPlotted = isRowPlotted(rowId)
+    const index = fields.findIndex(row => row.id === rowId);
 
     if (!isCurrentlyPlotted) {
       const parsedArray = parseComplexArray(rowsWatcher[index].range);
-      setPlottedRows(prev => [...prev, { id, data: parsedArray, name: rowsWatcher[index].name  }]);
+      setPlottedRows(prev => [...prev, { id: rowId, data: parsedArray, name: rowsWatcher[index].name  }]);
     } else {
-      setPlottedRows(prev => prev.filter(rowData => rowData.id !== id));
+      setPlottedRows(prev => prev.filter(rowData => rowData.id !== rowId));
     }
   }
 
@@ -58,7 +58,14 @@ const DynamicStiffness = ({ control }) => {
 			.filter(index => index !== -1)
 			.sort((a, b) => b - a);
 
-		indexesToRemove.forEach(index => remove(index))
+		indexesToRemove.forEach(index => {
+      const id = fields[index].id
+
+      remove(index)
+      if (isRowPlotted(id)) {
+        setPlottedRows(prev => prev.filter(rowData => rowData.id !== id))
+      }
+    })
   }
 
   const chartDataReal = {
@@ -109,7 +116,7 @@ const DynamicStiffness = ({ control }) => {
         </thead>
         <tbody>
           {fields.map((row, index) => {
-            const isPlotted = verifyIfIsPlotted(row.id)
+            const isPlotted = isRowPlotted(row.id)
             
             return(
               <tr key={row.id}>
