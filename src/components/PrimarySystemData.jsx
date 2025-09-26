@@ -31,6 +31,19 @@ const PrimarySystemData = ({ control, setValue }) => {
 		},
 	}
 
+	const modesRules = {
+		required: 'This field is required',
+		validate: (modes) => {
+			let modesArray 
+			if (Array.isArray(modes)) {
+				modesArray = modes
+			} else {
+				modesArray = modes.split(',')
+			}
+
+			return modesArray.every(mode => !isNaN(mode)) || "Values must be numbers"
+		}
+	}
 	const parseValue = (value) => {
     const parsed = parseFloat(value);
     return isNaN(parsed) ? '' : parsed;
@@ -150,6 +163,7 @@ const PrimarySystemData = ({ control, setValue }) => {
 								<Controller
 									name={`primarySystemModes.${index}`}
 									control={control}
+									rules = {modesRules}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
