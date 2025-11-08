@@ -10,6 +10,9 @@ import initialMaterials from '../Data/ViscoelasticMaterials.json';
 
 const NeutralizerOptimization = () => {
   const [optimizationResult, setOptimizationResult] = useState(null);
+  const [fileHandle, setFileHandle] = useState(null); // will store FileSystemFileHandle
+  const [fileName, setFileName] = useState(null); // store file name for display/fallback
+
   const methods = useForm({
     defaultValues: {
       primarySystemNaturalFrequencies: [],
@@ -22,25 +25,16 @@ const NeutralizerOptimization = () => {
           optimizationVariables: {
             real: [
               {
-                name: "frequency",
+                name: 'frequency',
                 lowerBound: '',
                 upperBound: '',
                 discretization: 1000
               }
             ],
             integer: [
-              {
-                name: "type",
-                range: []
-              },
-              {
-                name: "modal_position",
-                range: []
-              },
-              {
-                name: "viscoelastic_material",
-                range: []
-              }
+              { name: 'type', range: [] },
+              { name: 'modal_position', range: [] },
+              { name: 'viscoelastic_material', range: [] }
             ]
           }
         }
@@ -75,115 +69,205 @@ const NeutralizerOptimization = () => {
     }
   });
 
-  const { handleSubmit, setValue } = methods;
+  const { setValue } = methods;
 
   const normalizePrimarySystemModes = (modes) => {
-    const normalizedModes = []
-    let processingModes
+    const normalizedModes = [];
+    let processingModes;
 
     modes.forEach((mode) => {
-      if (typeof mode == 'string') {
-        processingModes = mode.split(',').map(Number)
-        normalizedModes.push(processingModes)
+      if (typeof mode === 'string') {
+        processingModes = mode.split(',').map(Number);
+        normalizedModes.push(processingModes);
       } else {
-        normalizedModes.push(mode)
+        normalizedModes.push(mode);
       }
-    })
+    });
 
-    modes = normalizedModes
-    return modes
-  }
-
-  console.log('Updated Form Values: ', methods.getValues());
-  const onSubmit = (data) => {
-    const payload = { ...data };
-
-    payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes)
-    console.log('Saving project with payload:', payload)
-    // Add your API call logic here
+    return normalizedModes;
   };
 
   const onOptimize = async () => {
     const formValues = methods.getValues();
     const payload = { ...formValues };
+    payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes);
 
-    payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes)
     try {
       const result = await optimizeNeutralizer(payload);
       console.log('Optimization result:', result);
-      setOptimizationResult(result); // <-- Save it to the state
+      setOptimizationResult(result);
     } catch (error) {
       console.error('Optimization failed:', error);
     }
   };
 
+  /**
+   * Opens an existing project JSON using the File System Access API (preferred)
+   */
   const openExistingProject = async () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'application/json';
-
-    const currentViscoelasticMaterials = (methods.getValues().additionalParameters.viscoelasticMaterials || []) // temporary logic
-
-    fileInput.onchange = async (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        try {
-          const text = await file.text();
-          const jsonData = JSON.parse(text);
-
-          if (jsonData) {
-            Object.entries(jsonData).forEach(([key, value]) => {
-              setValue(key, value, { shouldValidate: true });
-            });
-						console.log((jsonData) || 'erro')
-            console.log('Updated Form Values:', methods.getValues());
+    try {
+      // Attempt to use modern File System Access API
+      const [handle] = await window.showOpenFilePicker({
+        types: [
+          {
+            description: 'JSON Files',
+            accept: { 'application/json': ['.json'] }
           }
+        ],
+        excludeAcceptAllOption: true,
+        multiple: false
+      });
 
-          const newViscoelasticMaterials = (jsonData.additionalParameters?.viscoelasticMaterials || []) // temporary logic
-          setValue('additionalParameters.viscoelasticMaterials', [...currentViscoelasticMaterials, ...newViscoelasticMaterials]) // temporary logic
-        } catch (error) {
-          console.error('Error reading or parsing the file:', error);
-        }
-      }
-    };
+      const file = await handle.getFile();
+      const text = await file.text();
+      const jsonData = JSON.parse(text);
 
-    fileInput.click();
+      setFileHandle(handle);
+      setFileName(file.name);
+
+      const currentViscoelasticMaterials =
+        methods.getValues().additionalParameters.viscoelasticMaterials || [];
+
+      // populate form values
+      Object.entries(jsonData).forEach(([key, value]) => {
+        setValue(key, value, { shouldValidate: true });
+      });
+
+      const newViscoelasticMaterials =
+        jsonData.additionalParameters?.viscoelasticMaterials || [];
+      setValue(
+        'additionalParameters.viscoelasticMaterials',
+        [...currentViscoelasticMaterials, ...newViscoelasticMaterials]
+      );
+
+      console.log('Loaded JSON:', jsonData);
+    } catch (error) {
+      console.error('Error opening file:', error);
+      alert(
+        'Could not open file. If your browser does not support the File System Access API, use "Save As New" for saving.'
+      );
+    }
+  };
+
+  /**
+   * Save changes directly to the same file using File System Access API
+   */
+  const handleSave = async () => {
+    if (!fileHandle) return;
+
+    try {
+      const updatedData = methods.getValues();
+      const jsonString = JSON.stringify(updatedData, null, 2);
+      const writable = await fileHandle.createWritable();
+      await writable.write(jsonString);
+      await writable.close();
+      console.log('File successfully overwritten:', fileName);
+    } catch (error) {
+      console.error('Error saving file:', error);
+      alert(
+        'Could not overwrite file. Try "Save As New" instead.'
+      );
+    }
+  };
+
+  /**
+   * Save as new file (always available)
+   */
+  const handleSaveAsNew = () => {
+    try {
+      const updatedData = methods.getValues();
+      const jsonString = JSON.stringify(updatedData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'neutralizer_project.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      console.log('Project saved as new file');
+    } catch (error) {
+      console.error('Error saving new file:', error);
+    }
   };
 
   return (
     <FormProvider {...methods}>
       <Container>
-        <div className="d-flex justify-content-between mt-4 mb-4">
-          <Button variant="primary" onClick={openExistingProject}>
-            Open an Existing Project
-          </Button>
-          <Button variant="success" onClick={handleSubmit(onSubmit)}>
-            Save
-          </Button>
-          <Button variant="info" onClick={onOptimize}>
-            Optimize
-          </Button>
+        <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
+          <div className="d-flex gap-2">
+            <Button
+              variant="primary"
+              onClick={openExistingProject}
+            >
+              Open Project
+            </Button>
+
+            <Button
+              variant="success"
+              onClick={handleSave}
+              disabled={!fileHandle}
+              style={{
+                opacity: !fileHandle ? 0.5 : 1, 
+                cursor: !fileHandle ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Save
+            </Button>
+
+            <Button
+              variant="success"
+              onClick={handleSaveAsNew}
+              style={{
+                backgroundColor: '#28a745', 
+                opacity: 0.85, 
+              }}
+            >
+              Save As New
+            </Button>
+          </div>
+
+          <div>
+            <Button
+              variant="info"
+              onClick={onOptimize}
+            >
+              Optimize
+            </Button>
+          </div>
         </div>
 
         <Accordion>
           <Accordion.Item eventKey="0">
             <Accordion.Header>Primary System Data</Accordion.Header>
             <Accordion.Body>
-              <PrimarySystemData control={methods.control} setValue={methods.setValue} />
+              <PrimarySystemData
+                control={methods.control}
+                setValue={methods.setValue}
+              />
             </Accordion.Body>
           </Accordion.Item>
 
           <Accordion.Item eventKey="1">
             <Accordion.Header>Neutralizer Data</Accordion.Header>
             <Accordion.Body>
-              <NeutralizerData control={methods.control} errors={methods.errors} getValues={methods.getValues} setValue={methods.setValue} clearErrors={methods.clearErrors} />
+              <NeutralizerData
+                control={methods.control}
+                errors={methods.errors}
+                getValues={methods.getValues}
+                setValue={methods.setValue}
+                clearErrors={methods.clearErrors}
+              />
             </Accordion.Body>
           </Accordion.Item>
 
           <Accordion.Item eventKey="2">
             <Accordion.Header>Calculation Parameters</Accordion.Header>
             <Accordion.Body>
-              <CalculationParameters control={methods.control} errors={methods.formState.errors} />
+              <CalculationParameters
+                control={methods.control}
+                errors={methods.formState.errors}
+              />
             </Accordion.Body>
           </Accordion.Item>
 

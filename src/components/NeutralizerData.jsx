@@ -417,7 +417,9 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 														<option value="1">Viscoelastic</option>
 														<option value="2">Viscous</option>
 														<option value="3">Viscoelastic Link to ground</option>
-														<option value="4">Viscoelastic Link</option>
+														<option value="4">Viscoelastic Link
+															
+														</option>
 													</Form.Control>
 													{fieldState.error && (
 														<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
