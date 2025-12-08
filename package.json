@@ -22,6 +22,7 @@
     "bootstrap": "^5.2.0",
     "chart.js": "^4.4.7",
     "mathjs": "^14.4.0",
+    "plotly.js": "^3.3.0",
     "react": "^18.0.0",
     "react-bootstrap": "^2.7.4",
     "react-chartjs-2": "^5.2.0",

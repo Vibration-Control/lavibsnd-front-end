@@ -47,7 +47,8 @@ const NeutralizerOptimization = () => {
             name: '',
             range: []
           }
-        ]
+        ],
+        PrimarySystemNodePositions: []
       },
       excitationNodeOptimization: '',
       responseNodeOptimization: '',
@@ -191,11 +192,60 @@ const NeutralizerOptimization = () => {
     }
   };
 
+  const openRst = async () => {
+    try {
+      // Let user pick a file
+      const fileHandle = await window.showOpenFilePicker({
+        types: [
+          {
+            description: '.rst Files',
+            accept: { 'application/octet-stream': ['.rst'] },
+          },
+        ],
+        multiple: false,
+      });
+
+      const file = await fileHandle[0].getFile();
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("http://localhost:5000/convertRst", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to read .rst file from backend");
+      }
+
+      const data = await response.json();
+
+      // Existing values
+      methods.setValue("primarySystemNaturalFrequencies", data.PrimarySystemNaturalFrequencies || []);
+      methods.setValue("primarySystemModes", data.PrimarySystemModes || []);
+
+      // ✅ NEW: Set node positions under additionalParameters
+      methods.setValue(
+        "additionalParameters.PrimarySystemNodePositions",
+        data.PrimarySystemNodePositions || []
+      );
+
+      console.log("RST loaded:", data);
+
+    } catch (error) {
+      console.error("Failed to open or process .rst:", error);
+    }
+  };
+
+
+
   return (
     <FormProvider {...methods}>
       <Container>
         <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
           <div className="d-flex gap-2">
+
             <Button
               variant="primary"
               onClick={openExistingProject}
@@ -204,12 +254,19 @@ const NeutralizerOptimization = () => {
             </Button>
 
             <Button
+              variant="secondary"
+              onClick={openRst}
+            >
+              Open .rst
+            </Button>
+
+            <Button
               variant="success"
               onClick={handleSave}
               disabled={!fileHandle}
               style={{
-                opacity: !fileHandle ? 0.5 : 1, 
-                cursor: !fileHandle ? 'not-allowed' : 'pointer',
+                opacity: !fileHandle ? 0.5 : 1,
+                cursor: !fileHandle ? "not-allowed" : "pointer",
               }}
             >
               Save
@@ -219,23 +276,23 @@ const NeutralizerOptimization = () => {
               variant="success"
               onClick={handleSaveAsNew}
               style={{
-                backgroundColor: '#28a745', 
-                opacity: 0.85, 
+                backgroundColor: "#28a745",
+                opacity: 0.85,
               }}
             >
               Save As New
             </Button>
+
           </div>
 
           <div>
-            <Button
-              variant="info"
-              onClick={onOptimize}
-            >
+            <Button variant="info" onClick={onOptimize}>
               Optimize
             </Button>
           </div>
         </div>
+
+
 
         <Accordion>
           <Accordion.Item eventKey="0">

@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useState } from "react";
 import { Controller, useFieldArray, useWatch } from 'react-hook-form';
-import { Table, Button, Form } from 'react-bootstrap';
+import { Table, Button, Form, Modal } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
 import TemperatureDetuning from './TemperatureDetuning';
 import DynamicStiffness from './DynamicStiffness';
+import Plot from "react-plotly.js";
 
 const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) => {
 	const { fields, append, remove } = useFieldArray({
@@ -11,6 +12,14 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		name: 'neutralizers'
 	})
 	const neutralizerRows = useWatch({ control, name: 'neutralizers' })
+
+	const [showPlot, setShowPlot] = useState(false);
+
+	const nodePositions = useWatch({
+		control,
+		name: "additionalParameters.PrimarySystemNodePositions",
+	}) || [];
+
 
 	const createEmptyNeutralizer = () => ({
 		mass: 0.0,
@@ -281,7 +290,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				`neutralizers[.${rowIndex}.viscoelasticMaterial`
 			])
 		}
-	}	
+	}
 	const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
 		const array = row?.optimizationVariables?.[arrayType] || [];
 		const childIndex = array.findIndex(item => item.name === childName);
@@ -418,7 +427,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 														<option value="2">Viscous</option>
 														<option value="3">Viscoelastic Link to ground</option>
 														<option value="4">Viscoelastic Link
-															
+
 														</option>
 													</Form.Control>
 													{fieldState.error && (
@@ -632,6 +641,53 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					</tbody>
 				</Table>
 			</div>
+
+			{/* ===== PLOT STRUCTURE GEOMETRY BUTTON ===== */}
+			<div className="mt-4">
+				<Button
+					variant="secondary"
+					disabled={
+						!getValues("additionalParameters.PrimarySystemNodePositions") ||
+						getValues("additionalParameters.PrimarySystemNodePositions").length === 0
+					}
+					onClick={() => setShowPlot(true)}
+				>
+					Plot Structure Geometry
+				</Button>
+			</div>
+
+			{/* ===== MODAL WITH 3D PLOT ===== */}
+			<Modal show={showPlot} onHide={() => setShowPlot(false)} size="lg">
+				<Modal.Header closeButton>
+					<Modal.Title>Structure Geometry</Modal.Title>
+				</Modal.Header>
+
+				<Modal.Body>
+					<Plot
+						data={[
+							{
+								x: nodePositions.map(p => p[0]),
+								y: nodePositions.map(p => p[1]),
+								z: nodePositions.map(p => p[2]),
+								mode: "markers",
+								type: "scatter3d",
+								marker: { size: 3 },
+							}
+						]}
+						layout={{
+							autosize: true,
+							height: 600,
+							title: "3D Structure Nodes",
+							scene: {
+								xaxis: { title: "X" },
+								yaxis: { title: "Y" },
+								zaxis: { title: "Z" }
+							}
+						}}
+						style={{ width: "100%", height: "100%" }}
+					/>
+				</Modal.Body>
+			</Modal>
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
 			<TemperatureDetuning control={control} setValue={setValue} />
