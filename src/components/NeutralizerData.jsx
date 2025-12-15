@@ -665,29 +665,108 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				<Modal.Body>
 					<Plot
 						data={[
+							/* ===== BASE STRUCTURE NODES ===== */
 							{
-								x: nodePositions.map(p => p[0]),
-								y: nodePositions.map(p => p[1]),
-								z: nodePositions.map(p => p[2]),
+								x: nodePositions.map(p => p[1]),
+								y: nodePositions.map(p => p[2]),
+								z: nodePositions.map(p => p[3]),
+								customdata: nodePositions.map(p => p[0]),
+								hovertemplate:
+									"Node %{customdata}<br>X: %{x}<br>Y: %{y}<br>Z: %{z}<extra></extra>",
 								mode: "markers",
 								type: "scatter3d",
-								marker: { size: 3 },
-							}
+								name: "Structure Nodes",
+								showlegend: true,
+								marker: {
+									size: 3,
+									color: "#419b6ee8",
+								},
+							},
+
+							/* ===== NEUTRALIZER HIGHLIGHTS ===== */
+							...(neutralizerRows || []).flatMap((neutralizer, nIdx) => {
+								const integerVars =
+									neutralizer.optimizationVariables?.integer || [];
+
+								const parseRange = (range) => {
+									if (!range) return [];
+									if (Array.isArray(range)) return range.map(Number);
+									try {
+										return JSON.parse(range).map(Number);
+									} catch {
+										return [];
+									}
+								};
+
+								const modalPos =
+									integerVars.find(v => v.name === "modal_position")?.range;
+								const modalPosTip =
+									integerVars.find(v => v.name === "modal_position_tip")?.range;
+
+								const nodeNumbers = [
+									...parseRange(modalPos),
+									...parseRange(modalPosTip),
+								];
+
+								if (nodeNumbers.length === 0) return [];
+
+								const selectedNodes = nodePositions.filter(p =>
+									nodeNumbers.includes(p[0])
+								);
+
+								if (selectedNodes.length === 0) return [];
+
+								const COLORS = [
+									"#e41a1c",
+									"#377eb8",
+									"#4daf4a",
+									"#984ea3",
+									"#ff7f00",
+									"#ffff33",
+									"#a65628",
+								];
+
+								return [
+									{
+										x: selectedNodes.map(p => p[1]),
+										y: selectedNodes.map(p => p[2]),
+										z: selectedNodes.map(p => p[3]),
+										customdata: selectedNodes.map(p => p[0]),
+										hovertemplate:
+											"Node %{customdata}<extra></extra>",
+										mode: "markers",
+										type: "scatter3d",
+										name: `Neutralizer ${nIdx + 1}`,
+										showlegend: true,
+										marker: {
+											size: 6,
+											color: COLORS[nIdx % COLORS.length],
+										},
+									},
+								];
+							}),
 						]}
 						layout={{
 							autosize: true,
 							height: 600,
 							title: "3D Structure Nodes",
+							showlegend: true,
+							legend: {
+								x: 1,
+								y: 1,
+							},
 							scene: {
 								xaxis: { title: "X" },
 								yaxis: { title: "Y" },
-								zaxis: { title: "Z" }
-							}
+								zaxis: { title: "Z" },
+							},
 						}}
 						style={{ width: "100%", height: "100%" }}
 					/>
 				</Modal.Body>
 			</Modal>
+
+
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
 			<TemperatureDetuning control={control} setValue={setValue} />
