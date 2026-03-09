@@ -15,6 +15,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 	const [showPlot, setShowPlot] = useState(false);
 
+	const additionalParameters = useWatch({ control, name: 'additionalParameters' })
+
 	const nodePositions = useWatch({
 		control,
 		name: "additionalParameters.PrimarySystemNodePositions",
@@ -595,44 +597,160 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 									</td>
 									<td>
 										<Controller
-											name={`neutralizers.${index}.viscoelasticMaterial`}
+											name={
+												getFieldPath(
+													'integer',
+													row,
+													'viscoelastic_material',
+													index,
+													'range'
+												) || `neutralizers.${index}.optimizationVariables.integer`
+											}
 											control={control}
 											rules={getRulesViscoelasticMaterial(isViscoelasticEnabled)}
-											defaultValue=""
-											render={({ field, fieldState }) => (
-												<>
-													<Form.Control
-														{...field}
-														type="text"
-														placeholder="[Material1, Material2]"
-														disabled={!isViscoelasticEnabled}
-													/>
-													{fieldState.error && (
-														<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
-													)}
-												</>
-											)}
+											defaultValue={[]}
+											render={({ field, fieldState }) => {
+												const selectedValues = Array.isArray(field.value)
+													? field.value.map(String)
+													: [];
+
+												return (
+													<>
+														<Form.Control
+															as="select"
+															multiple
+															disabled={!isViscoelasticEnabled}
+															value={selectedValues}
+															onChange={(e) => {
+																const selectedIndexes = Array.from(
+																	e.target.selectedOptions,
+																	(option) => Number(option.value)
+																);
+
+																const path = getFieldPath(
+																	'integer',
+																	row,
+																	'viscoelastic_material',
+																	index,
+																	'range'
+																);
+
+																// Normal case
+																if (path) {
+																	field.onChange(selectedIndexes);
+																	return;
+																}
+
+																// Object does not exist → create it
+																const integerPath = `neutralizers.${index}.optimizationVariables.integer`;
+
+																const currentArray = getValues(integerPath) || [];
+
+																const newViscoelasticMaterial = {
+																	name: "viscoelastic_material",
+																	range: selectedIndexes
+																};
+
+																setValue(integerPath, [...currentArray, newViscoelasticMaterial], {
+																	shouldDirty: true,
+																	shouldValidate: true
+																});
+															}}
+														>
+															{additionalParameters.viscoelasticMaterials.map((material, i) => (
+																<option key={i} value={String(i)}>
+																	{material.name}
+																</option>
+															))}
+														</Form.Control>
+
+														{fieldState.error && (
+															<Form.Text className="text-danger">
+																{fieldState.error.message}
+															</Form.Text>
+														)}
+													</>
+												);
+											}}
 										/>
 									</td>
+
 									<td>
 										<Controller
-											name={`neutralizers.${index}.dynamicStiffness`}
+											name={
+												getFieldPath(
+													'integer',
+													row,
+													'dynamic_stiffness',
+													index,
+													'range'
+												) || `neutralizers.${index}.optimizationVariables.integer`
+											}
 											control={control}
-											rules={getRulesDynamicStiffness(isDynamicStiffnessEnabled)}
-											defaultValue=""
-											render={({ field, fieldState }) => (
-												<>
-													<Form.Control
-														{...field}
-														type="text"
-														placeholder="[Stiffness1, Stiffness2]"
-														disabled={!isDynamicStiffnessEnabled}
-													/>
-													{fieldState.error && (
-														<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
-													)}
-												</>
-											)}
+											defaultValue={[]}
+											render={({ field, fieldState }) => {
+												const selectedValues = Array.isArray(field.value)
+													? field.value.map(String)
+													: [];
+
+												return (
+													<>
+														<Form.Control
+															as="select"
+															multiple
+															disabled={!isDynamicStiffnessEnabled}
+															value={selectedValues}
+															onChange={(e) => {
+																const selectedIndexes = Array.from(
+																	e.target.selectedOptions,
+																	(option) => Number(option.value)
+																);
+
+																const path = getFieldPath(
+																	'integer',
+																	row,
+																	'dynamic_stiffness',
+																	index,
+																	'range'
+																);
+
+																// Normal case (object already exists)
+																if (path) {
+																	field.onChange(selectedIndexes);
+																	return;
+																}
+
+																// Object does not exist → create it
+																const integerPath = `neutralizers.${index}.optimizationVariables.integer`;
+
+																const currentArray = getValues(integerPath) || [];
+
+																const newDynamicStiffness = {
+																	name: "dynamic_stiffness",
+																	range: selectedIndexes
+																};
+
+																setValue(integerPath, [...currentArray, newDynamicStiffness], {
+																	shouldDirty: true,
+																	shouldValidate: true
+																});
+															}}
+														>
+															{additionalParameters.userDefinedDynamicStiffnesses.map((stiffness, i) => (
+																<option key={i} value={String(i)}>
+																	{stiffness.name}
+																</option>
+															))}
+														</Form.Control>
+
+														{fieldState.error && (
+															<Form.Text className="text-danger">
+																{fieldState.error.message}
+															</Form.Text>
+														)}
+													</>
+												);
+											}}
 										/>
 									</td>
 								</tr>
