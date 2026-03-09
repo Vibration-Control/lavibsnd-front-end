@@ -19,7 +19,7 @@ const NeutralizerOptimization = () => {
       primarySystemModalDamping: [],
       primarySystemModes: [],
       neutralizers: [
-        {
+/*        {
           mass: 0.0,
           massTypeUserDefined: true,
           optimizationVariables: {
@@ -37,7 +37,7 @@ const NeutralizerOptimization = () => {
               { name: 'viscoelastic_material', range: [] }
             ]
           }
-        }
+        } */
       ],
       additionalParameters: {
         viscoelasticMaterials: initialMaterials,
@@ -74,11 +74,14 @@ const NeutralizerOptimization = () => {
 
   const normalizePrimarySystemModes = (modes) => {
     const normalizedModes = [];
-    let processingModes;
+    let processingModes, auxMode;
 
+    console.log(`Esses são os modos:`)
+    console.log(modes)
     modes.forEach((mode) => {
       if (typeof mode === 'string') {
-        processingModes = mode.split(',').map(Number);
+        auxMode = mode.replace(/\[/, '').replace(/\]/,'')
+        processingModes = auxMode.split(',').map(Number);
         normalizedModes.push(processingModes);
       } else {
         normalizedModes.push(mode);

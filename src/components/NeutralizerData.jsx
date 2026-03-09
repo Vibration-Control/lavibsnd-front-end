@@ -63,7 +63,11 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				{
 					name: "viscoelastic_material",
 					range: []
-				}
+				},
+        {
+          name: "dynamic_stiffness",
+          range: []
+        }
 			]
 		}
 	});
@@ -253,6 +257,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 		indexesToRemove.forEach(index => remove(index))
 	};
+
 	const handleTypeChange = (e, fieldOnChange, rowIndex) => {
 		const selectedValues = Array.from(
 			e.target.selectedOptions,
@@ -270,12 +275,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			])
 		}
 
-		if (!selectedValues.includes('0')) {
+		/* if (!selectedValues.includes('0')) {
 			setValue(`neutralizers.${rowIndex}.dynamicStiffness`, '')
 			clearErrors([
 				`neutralizers.${rowIndex}.dynamicStiffness`
 			])
-		}
+		}*/
 
 		if (!selectedValues.includes('2')) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].lowerBound`, '');
@@ -286,13 +291,14 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			]);
 		}
 
-		if (!selectedValues.includes('1')) {
+		/*if (!selectedValues.includes('1')) {
 			setValue(`neutralizers[.${rowIndex}.viscoelasticMaterial`, '');
 			clearErrors([
 				`neutralizers[.${rowIndex}.viscoelasticMaterial`
 			])
-		}
+		}*/
 	}
+  
 	const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
 		const array = row?.optimizationVariables?.[arrayType] || [];
 		const childIndex = array.findIndex(item => item.name === childName);
@@ -883,8 +889,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					/>
 				</Modal.Body>
 			</Modal>
-
-
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
 			<TemperatureDetuning control={control} setValue={setValue} />
