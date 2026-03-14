@@ -323,24 +323,24 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					striped
 					bordered
 					hover
-					style={{ minWidth: '1600px', tableLayout: 'fixed' }}
+					style={{ minWidth: '1600px'}}
 				>
 					<thead>
 						<tr>
-							<th style={{ minWidth: '100px' }}>Select</th>
-							<th style={{ minWidth: '1500px' }}>Mass Type</th>
+							<th style={{ minWidth: '50px' }}>Select</th>
+							<th style={{ minWidth: '160px' }}>Mass Type</th>
 							<th style={{ minWidth: '100px' }}>Mass</th>
-							<th style={{ minWidth: '150px' }}>Neutralizer Type</th>
-							<th style={{ minWidth: '150px' }}>Modal Position</th>
-							<th style={{ minWidth: '180px' }}>Modal Position Tip (Link)</th>
-							<th style={{ minWidth: '180px' }}>Natural Frequency Lower Bound</th>
-							<th style={{ minWidth: '180px' }}>Natural Frequency Upper Bound</th>
-							<th style={{ minWidth: '150px' }}>Damping Ratio Lower Bound</th>
-							<th style={{ minWidth: '150px' }}>Damping Ratio Upper Bound</th>
-							<th style={{ minWidth: '150px' }}>Shape Factor Lower Bound</th>
-							<th style={{ minWidth: '150px' }}>Shape Factor Upper Bound</th>
-							<th style={{ minWidth: '180px' }}>Viscoelastic Material</th>
-							<th style={{ minWidth: '180px' }}>Dynamic Stiffness</th>
+							<th style={{ minWidth: '200px' }}>Neutralizer Type</th>
+							<th style={{ minWidth: '100px' }}>Modal Position</th>
+							<th style={{ minWidth: '100px' }}>Modal Position Tip (Link)</th>
+							<th style={{ minWidth: '100px' }}>Natural Frequency Lower Bound</th>
+							<th style={{ minWidth: '100px' }}>Natural Frequency Upper Bound</th>
+							<th style={{ minWidth: '100px' }}>Damping Ratio Lower Bound</th>
+							<th style={{ minWidth: '100px' }}>Damping Ratio Upper Bound</th>
+							<th style={{ minWidth: '100px' }}>Shape Factor Lower Bound</th>
+							<th style={{ minWidth: '100px' }}>Shape Factor Upper Bound</th>
+							<th style={{ minWidth: '200px' }}>Viscoelastic Material</th>
+							<th style={{ minWidth: '200px' }}>Dynamic Stiffness</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -349,7 +349,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 								neutralizerRows?.[index]?.optimizationVariables?.integer?.find(
 									(i) => i.name === "type"
 								)?.range || [];
-							const isModalPositionTipEnabled = types.includes(3)
+							const isModalPositionTipEnabled = types.includes(4)
 							const isShapeFactorEnabled = types.includes(3) || types.includes(4)
 							const isNatFreqEnabled = types.includes(1) || types.includes(2)
 							const isDampingEnabled = types.includes(2)
