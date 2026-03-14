@@ -19,25 +19,25 @@ const NeutralizerOptimization = () => {
       primarySystemModalDamping: [],
       primarySystemModes: [],
       neutralizers: [
-/*        {
-          mass: 0.0,
-          massTypeUserDefined: true,
-          optimizationVariables: {
-            real: [
-              {
-                name: 'frequency',
-                lowerBound: '',
-                upperBound: '',
-                discretization: 1000
-              }
-            ],
-            integer: [
-              { name: 'type', range: [] },
-              { name: 'modal_position', range: [] },
-              { name: 'viscoelastic_material', range: [] }
-            ]
-          }
-        } */
+        /*        {
+                  mass: 0.0,
+                  massTypeUserDefined: true,
+                  optimizationVariables: {
+                    real: [
+                      {
+                        name: 'frequency',
+                        lowerBound: '',
+                        upperBound: '',
+                        discretization: 1000
+                      }
+                    ],
+                    integer: [
+                      { name: 'type', range: [] },
+                      { name: 'modal_position', range: [] },
+                      { name: 'viscoelastic_material', range: [] }
+                    ]
+                  }
+                } */
       ],
       additionalParameters: {
         viscoelasticMaterials: initialMaterials,
@@ -76,11 +76,9 @@ const NeutralizerOptimization = () => {
     const normalizedModes = [];
     let processingModes, auxMode;
 
-    console.log(`Esses são os modos:`)
-    console.log(modes)
     modes.forEach((mode) => {
       if (typeof mode === 'string') {
-        auxMode = mode.replace(/\[/, '').replace(/\]/,'')
+        auxMode = mode.replace(/\[/, '').replace(/\]/, '')
         processingModes = auxMode.split(',').map(Number);
         normalizedModes.push(processingModes);
       } else {
@@ -91,13 +89,74 @@ const NeutralizerOptimization = () => {
     return normalizedModes;
   };
 
+  const formatPayloadForApi = (input) => {
+
+    const convertStringArray = (value) => {
+      if (typeof value === "string") {
+        const trimmed = value.trim()
+
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+          try {
+            return JSON.parse(trimmed)
+          } catch {
+            return value
+          }
+        }
+      }
+
+      return value
+    }
+
+    const shouldRemoveObject = (obj) => {
+      if (obj && typeof obj === "object") {
+        if ("lowerBound" in obj && obj.lowerBound === "") return true
+        if ("range" in obj && Array.isArray(obj.range) && obj.range.length === 0) return true
+      }
+
+      return false
+    }
+
+    const traverse = (value) => {
+
+      if (Array.isArray(value)) {
+        const newArray = []
+
+        for (const item of value) {
+
+          if (typeof item === "object" && item !== null) {
+            if (shouldRemoveObject(item)) continue
+          }
+
+          newArray.push(traverse(item))
+        }
+
+        return newArray
+      }
+
+      if (typeof value === "object" && value !== null) {
+        const newObj = {}
+
+        for (const key in value) {
+          newObj[key] = traverse(value[key])
+        }
+
+        return newObj
+      }
+
+      return convertStringArray(value)
+    }
+    return traverse(input)
+  }
+
   const onOptimize = async () => {
     const formValues = methods.getValues();
     const payload = { ...formValues };
     payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes);
 
+    const formatedPayload = formatPayloadForApi(payload)
+
     try {
-      const result = await optimizeNeutralizer(payload);
+      const result = await optimizeNeutralizer(formatedPayload);
       console.log('Optimization result:', result);
       setOptimizationResult(result);
     } catch (error) {
@@ -161,7 +220,8 @@ const NeutralizerOptimization = () => {
 
     try {
       const updatedData = methods.getValues();
-      const jsonString = JSON.stringify(updatedData, null, 2);
+      const formatedPayload = formatPayloadForApi(updatedData)
+      const jsonString = JSON.stringify(formatedPayload, null, 2);
       const writable = await fileHandle.createWritable();
       await writable.write(jsonString);
       await writable.close();
@@ -180,7 +240,8 @@ const NeutralizerOptimization = () => {
   const handleSaveAsNew = () => {
     try {
       const updatedData = methods.getValues();
-      const jsonString = JSON.stringify(updatedData, null, 2);
+      const formatedPayload = formatPayloadForApi(updatedData)
+      const jsonString = JSON.stringify(formatedPayload, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
 

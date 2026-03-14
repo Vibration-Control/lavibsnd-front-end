@@ -63,11 +63,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				{
 					name: "viscoelastic_material",
 					range: []
-				},
-        {
-          name: "dynamic_stiffness",
-          range: []
-        }
+				}
 			]
 		}
 	});
@@ -257,32 +253,33 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 		indexesToRemove.forEach(index => remove(index))
 	};
-
 	const handleTypeChange = (e, fieldOnChange, rowIndex) => {
 		const selectedValues = Array.from(
 			e.target.selectedOptions,
-			option => option.value
+			option => Number(option.value)
 		);
 
-		fieldOnChange(selectedValues)
+		fieldOnChange(selectedValues);
 
-		if (!selectedValues.includes('1') && !selectedValues.includes('2')) {
-			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`, '')
-			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`, '')
+		console.log(selectedValues)
+
+		if (!selectedValues.includes(1) && !selectedValues.includes(2)) {
+			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`, '');
+			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`, '');
 			clearErrors([
 				`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`,
 				`neutralizers.${rowIndex}.optimizationVariables.real[0].upperBound`,
-			])
+			]);
 		}
 
-		/* if (!selectedValues.includes('0')) {
-			setValue(`neutralizers.${rowIndex}.dynamicStiffness`, '')
+		if (!selectedValues.includes(0)) {
+			setValue(`neutralizers.${rowIndex}.dynamicStiffness`, '');
 			clearErrors([
 				`neutralizers.${rowIndex}.dynamicStiffness`
-			])
-		}*/
+			]);
+		}
 
-		if (!selectedValues.includes('2')) {
+		if (!selectedValues.includes(2)) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].lowerBound`, '');
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[1].upperBound`, '');
 			clearErrors([
@@ -291,14 +288,13 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			]);
 		}
 
-		/*if (!selectedValues.includes('1')) {
-			setValue(`neutralizers[.${rowIndex}.viscoelasticMaterial`, '');
+		if (!selectedValues.includes(1)) {
+			setValue(`neutralizers.${rowIndex}.viscoelasticMaterial`, '');
 			clearErrors([
-				`neutralizers[.${rowIndex}.viscoelasticMaterial`
-			])
-		}*/
-	}
-  
+				`neutralizers.${rowIndex}.viscoelasticMaterial`
+			]);
+		}
+	};
 	const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
 		const array = row?.optimizationVariables?.[arrayType] || [];
 		const childIndex = array.findIndex(item => item.name === childName);
@@ -353,12 +349,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 								neutralizerRows?.[index]?.optimizationVariables?.integer?.find(
 									(i) => i.name === "type"
 								)?.range || [];
-							const isModalPositionTipEnabled = types.includes('3')
-							const isShapeFactorEnabled = types.includes('3') || types.includes('4')
-							const isNatFreqEnabled = types.includes('1') || types.includes('2')
-							const isDampingEnabled = types.includes('2')
-							const isViscoelasticEnabled = types.includes('1') || types.includes('3') || types.includes('4')
-							const isDynamicStiffnessEnabled = types.includes('0');
+							const isModalPositionTipEnabled = types.includes(3)
+							const isShapeFactorEnabled = types.includes(3) || types.includes(4)
+							const isNatFreqEnabled = types.includes(1) || types.includes(2)
+							const isDampingEnabled = types.includes(2)
+							const isViscoelasticEnabled = types.includes(1) || types.includes(3) || types.includes(4)
+							const isDynamicStiffnessEnabled = types.includes(0);
 
 							return (
 								<tr key={row.id}>
@@ -430,11 +426,11 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 														value={field.value}
 														onChange={(e) => handleTypeChange(e, field.onChange, index)}
 													>
-														<option value="0">User Defined Dynamic Stiffness</option>
-														<option value="1">Viscoelastic</option>
-														<option value="2">Viscous</option>
-														<option value="3">Viscoelastic Link to ground</option>
-														<option value="4">Viscoelastic Link
+														<option value='0'>User Defined Dynamic Stiffness</option>
+														<option value='1'>Viscoelastic</option>
+														<option value='2'>Viscous</option>
+														<option value='3'>Viscoelastic Link to ground</option>
+														<option value='4'>Viscoelastic Link
 
 														</option>
 													</Form.Control>
@@ -889,6 +885,8 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					/>
 				</Modal.Body>
 			</Modal>
+
+
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
 			<TemperatureDetuning control={control} setValue={setValue} />
