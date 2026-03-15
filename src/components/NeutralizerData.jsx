@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { Table, Button, Form, Modal } from 'react-bootstrap';
 import ViscoelasticMaterials from './ViscoelasticMaterials';
@@ -22,6 +22,11 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		name: "additionalParameters.PrimarySystemNodePositions",
 	}) || [];
 
+	const [selectedNodes, setSelectedNodes] = useState([]);
+	const [selectedNeutralizer, setSelectedNeutralizer] = useState("");
+	const [targetVariable, setTargetVariable] = useState("");
+	const lastClickRef = useRef(0);
+	const CLICK_COOLDOWN = 250; // milliseconds
 
 	const createEmptyNeutralizer = () => ({
 		mass: 0.0,
@@ -304,6 +309,69 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			: `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}`;
 	};
 
+
+	const parseRange = (range) => {
+		if (!range) return [];
+		if (Array.isArray(range)) return range.map(Number);
+		try {
+			return JSON.parse(range).map(Number);
+		} catch {
+			return [];
+		}
+	};
+
+	const handlePointClick = (event) => {
+
+		if (!event?.points?.length) return;
+
+		const now = Date.now();
+
+		// Ignore clicks during cooldown
+		if (now - lastClickRef.current < CLICK_COOLDOWN) return;
+
+		lastClickRef.current = now;
+
+		const nodeNumber = event.points[0].customdata;
+
+		setSelectedNodes(prev => {
+
+			// If already selected → remove it
+			if (prev.includes(nodeNumber)) {
+				return prev.filter(n => n !== nodeNumber);
+			}
+
+			// Otherwise add it
+			return [...prev, nodeNumber];
+		});
+	};
+
+	const assignNodes = () => {
+
+		if (!selectedNodes.length) return;
+
+		const path = `neutralizers.${selectedNeutralizer}.optimizationVariables.integer`;
+
+		const vars = getValues(path) || [];
+
+		const idx = vars.findIndex(v => v.name === targetVariable);
+
+		if (idx === -1) return;
+
+		const currentRange = vars[idx].range || [];
+
+		const parsedCurrent =
+			Array.isArray(currentRange)
+				? currentRange
+				: JSON.parse(currentRange || "[]");
+
+		const updatedRange = JSON.stringify(
+			[...new Set([...parsedCurrent, ...selectedNodes])]
+		);
+		setValue(`${path}.${idx}.range`, updatedRange);
+
+		setSelectedNodes([]);
+	};
+
 	return (
 		<div>
 			<div className="d-flex justify-content-between mb-3">
@@ -323,7 +391,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					striped
 					bordered
 					hover
-					style={{ minWidth: '1600px'}}
+					style={{ minWidth: '1600px' }}
 				>
 					<thead>
 						<tr>
@@ -776,116 +844,218 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				</Button>
 			</div>
 
-			{/* ===== MODAL WITH 3D PLOT ===== */}
 			<Modal show={showPlot} onHide={() => setShowPlot(false)} size="lg">
+
 				<Modal.Header closeButton>
 					<Modal.Title>Structure Geometry</Modal.Title>
 				</Modal.Header>
 
 				<Modal.Body>
+
 					<Plot
+						onClick={handlePointClick}
 						data={[
+
 							/* ===== BASE STRUCTURE NODES ===== */
+
 							{
 								x: nodePositions.map(p => p[1]),
 								y: nodePositions.map(p => p[2]),
 								z: nodePositions.map(p => p[3]),
 								customdata: nodePositions.map(p => p[0]),
+
 								hovertemplate:
 									"Node %{customdata}<br>X: %{x}<br>Y: %{y}<br>Z: %{z}<extra></extra>",
+
 								mode: "markers",
 								type: "scatter3d",
 								name: "Structure Nodes",
-								showlegend: true,
+
 								marker: {
 									size: 3,
-									color: "#419b6ee8",
-								},
+									color: "#419b6ee8"
+								}
 							},
 
-							/* ===== NEUTRALIZER HIGHLIGHTS ===== */
+							/* ===== SELECTED NODES ===== */
+
+							{
+								x: nodePositions
+									.filter(p => selectedNodes.includes(p[0]))
+									.map(p => p[1]),
+
+								y: nodePositions
+									.filter(p => selectedNodes.includes(p[0]))
+									.map(p => p[2]),
+
+								z: nodePositions
+									.filter(p => selectedNodes.includes(p[0]))
+									.map(p => p[3]),
+
+								customdata: nodePositions
+									.filter(p => selectedNodes.includes(p[0]))
+									.map(p => p[0]),
+
+								mode: "markers",
+								type: "scatter3d",
+								name: "Selected Nodes",
+
+								marker: {
+									size: 8,
+									color: "#ffd000",
+									symbol: "diamond"
+								}
+							},
+
+							/* ===== NEUTRALIZER POSITIONS ===== */
+
 							...(neutralizerRows || []).flatMap((neutralizer, nIdx) => {
+
 								const integerVars =
 									neutralizer.optimizationVariables?.integer || [];
 
-								const parseRange = (range) => {
-									if (!range) return [];
-									if (Array.isArray(range)) return range.map(Number);
-									try {
-										return JSON.parse(range).map(Number);
-									} catch {
-										return [];
-									}
-								};
-
 								const modalPos =
 									integerVars.find(v => v.name === "modal_position")?.range;
+
 								const modalPosTip =
 									integerVars.find(v => v.name === "modal_position_tip")?.range;
 
-								const nodeNumbers = [
-									...parseRange(modalPos),
-									...parseRange(modalPosTip),
-								];
+								const modalNodes = parseRange(modalPos);
+								const tipNodes = parseRange(modalPosTip);
 
-								if (nodeNumbers.length === 0) return [];
-
-								const selectedNodes = nodePositions.filter(p =>
-									nodeNumbers.includes(p[0])
+								const modalSelected = nodePositions.filter(p =>
+									modalNodes.includes(p[0])
 								);
 
-								if (selectedNodes.length === 0) return [];
-
-								const COLORS = [
-									"#e41a1c",
-									"#377eb8",
-									"#4daf4a",
-									"#984ea3",
-									"#ff7f00",
-									"#ffff33",
-									"#a65628",
-								];
+								const tipSelected = nodePositions.filter(p =>
+									tipNodes.includes(p[0])
+								);
 
 								return [
+
+									/* Modal Position */
+
 									{
-										x: selectedNodes.map(p => p[1]),
-										y: selectedNodes.map(p => p[2]),
-										z: selectedNodes.map(p => p[3]),
-										customdata: selectedNodes.map(p => p[0]),
-										hovertemplate:
-											"Node %{customdata}<extra></extra>",
+										x: modalSelected.map(p => p[1]),
+										y: modalSelected.map(p => p[2]),
+										z: modalSelected.map(p => p[3]),
+
+										customdata: modalSelected.map(p => p[0]),
+
 										mode: "markers",
 										type: "scatter3d",
-										name: `Neutralizer ${nIdx + 1}`,
-										showlegend: true,
+
+										name: `Neutralizer ${nIdx + 1} Modal Position`,
+
 										marker: {
 											size: 6,
-											color: COLORS[nIdx % COLORS.length],
-										},
+											color: "#ff5733"
+										}
 									},
+
+									/* Modal Position Tip */
+
+									{
+										x: tipSelected.map(p => p[1]),
+										y: tipSelected.map(p => p[2]),
+										z: tipSelected.map(p => p[3]),
+
+										customdata: tipSelected.map(p => p[0]),
+
+										mode: "markers",
+										type: "scatter3d",
+
+										name: `Neutralizer ${nIdx + 1} Modal Position Tip`,
+
+										marker: {
+											size: 6,
+											color: "#33c3ff"
+										}
+									}
 								];
-							}),
+							})
+
 						]}
+
 						layout={{
 							autosize: true,
 							height: 600,
+
 							title: "3D Structure Nodes",
+
 							showlegend: true,
+
 							legend: {
 								x: 1,
-								y: 1,
+								y: 1
 							},
+
 							scene: {
 								xaxis: { title: "X" },
 								yaxis: { title: "Y" },
-								zaxis: { title: "Z" },
-							},
+								zaxis: { title: "Z" }
+							}
 						}}
+
 						style={{ width: "100%", height: "100%" }}
 					/>
-				</Modal.Body>
-			</Modal>
 
+					{/* ===== NODE ASSIGNMENT UI ===== */}
+
+					<div className="mt-3 d-flex gap-2">
+
+						<Form.Select
+							value={selectedNeutralizer}
+							onChange={e => setSelectedNeutralizer(e.target.value)}
+							disabled={!selectedNodes.length}
+						>
+
+							<option value="">Select Neutralizer</option>
+
+							{neutralizerRows.map((_, i) => (
+								<option key={i} value={i}>
+									Neutralizer {i + 1}
+								</option>
+							))}
+
+						</Form.Select>
+
+
+						<Form.Select
+							value={targetVariable}
+							onChange={e => setTargetVariable(e.target.value)}
+							disabled={!selectedNodes.length}
+						>
+
+							<option value="">Assign To</option>
+							<option value="modal_position">
+								Modal Position
+							</option>
+							<option value="modal_position_tip">
+								Modal Position Tip (Link)
+							</option>
+
+						</Form.Select>
+
+
+						<Button
+							disabled={
+								!selectedNodes.length ||
+								selectedNeutralizer === "" ||
+								!targetVariable
+							}
+							onClick={assignNodes}
+						>
+
+							Add Selected Nodes
+
+						</Button>
+
+					</div>
+
+				</Modal.Body>
+
+			</Modal>
 
 
 			<ViscoelasticMaterials control={control} errors={errors} getValues={getValues} />
