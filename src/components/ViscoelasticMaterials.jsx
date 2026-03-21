@@ -3,7 +3,7 @@ import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
-import initialMaterials from '../Data/ViscoelasticMaterials.json';
+import FitFromDataModal from "./FitFromDataModal";
 
 const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
 const isothermalTemperatures = [253, 273, 293, 313, 333];
@@ -25,10 +25,21 @@ const formatPowerOf10 = (value) => {
 
 const ViscoelasticMaterial = ({ control, errors, getValues }) => {
 
-  const { fields, append, remove } = useFieldArray({ 
+  const { fields, append, remove } = useFieldArray({
     control,
     name: 'additionalParameters.viscoelasticMaterials'
   })
+
+  const [showFitModal, setShowFitModal] = useState(false);
+
+  const handleFit = (payload) => {
+    console.log("Fitting with:", payload);
+
+    // call backend or optimization routine here
+
+    setShowFitModal(false);
+  };
+
 
   const [plottedRows, setPlottedRows] = useState([]);
   const viscoelasticMaterialRows = useWatch({ control, name: 'additionalParameters.viscoelasticMaterials' })
@@ -50,11 +61,11 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     ...rules,
     validate: (value) => {
       const upperBound = viscoelasticMaterialRows[rowIndex].upperShearModulus
-      
+
       if (!value || !upperBound)
         return true
 
-      return (parseFloat(value) < parseFloat(upperBound)) 
+      return (parseFloat(value) < parseFloat(upperBound))
         || 'Value must be lower than Upper Shear Modulus'
     }
   })
@@ -65,9 +76,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
       const lowerBound = viscoelasticMaterialRows[rowIndex].lowerShearModulus
 
       if (!value || !lowerBound)
-          return true
+        return true
 
-      return (parseFloat(lowerBound) < parseFloat(value)) 
+      return (parseFloat(lowerBound) < parseFloat(value))
         || 'Value must be higher than Lower Shear Modulus'
     }
   })
@@ -89,13 +100,13 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     const currentViscoelasticMaterialRows = (viscoelasticMaterialRows || [])
 
     const indexesToRemove = currentViscoelasticMaterialRows
-			.map((row, index) => (row?.checked ? index : -1))
-			.filter(index => index !== -1)
-			.sort((a, b) => b - a);
+      .map((row, index) => (row?.checked ? index : -1))
+      .filter(index => index !== -1)
+      .sort((a, b) => b - a);
 
-		indexesToRemove.forEach(index => {
+    indexesToRemove.forEach(index => {
       const id = fields[index].id
-      
+
       remove(index)
       if (plottedRows.includes(id)) {
         setPlottedRows(prev => prev.filter(i => i !== id))
@@ -111,9 +122,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     const T0 = parseFloat(row.referenceTemperature);
     const theta1 = parseFloat(row.teta1);
     const theta2 = parseFloat(row.teta2);
-    
+
     if ([T, T0, theta1, theta2].some(isNaN)) return NaN;
-    
+
     const exponent = -theta1 * (T - T0) / (theta2 + (T - T0));
     return Math.pow(10, exponent);
   };
@@ -123,12 +134,12 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     const Ginf = parseFloat(row.upperShearModulus);
     const b = parseFloat(row.temperatureShiftingFactor);
     const alpha = parseFloat(row.fractionalDerivativeParameter);
-    
+
     if ([G0, Ginf, b, alpha].some(isNaN)) return null;
 
     // Generate frequencies from 1e-10 to 1e10
-    const frequencies = Array.from({ length: 200 }, (_, i) => 
-      Math.pow(10, (i/200)*20 - 10)
+    const frequencies = Array.from({ length: 200 }, (_, i) =>
+      Math.pow(10, (i / 200) * 20 - 10)
     );
 
     const data = { G: [], eta: [], omega: [], isotherms: [] };
@@ -138,20 +149,20 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
       const omega = f;
       const bOmega = b * omega;
       const angle = (alpha * Math.PI) / 2;
-      
+
       const term1 = Math.pow(bOmega, alpha);
-      const term2 = Math.pow(bOmega, 2*alpha);
-      
+      const term2 = Math.pow(bOmega, 2 * alpha);
+
       // Shear modulus
       const numeratorG = G0 + (G0 + Ginf) * term1 * Math.cos(angle) + Ginf * term2;
       const denominatorG = 1 + 2 * term1 * Math.cos(angle) + term2;
       const G = numeratorG / denominatorG;
-      
+
       // Loss factor
       const numeratorEta = (Ginf - G0) * term1 * Math.sin(angle);
       const denominatorEta = G0 + (G0 + Ginf) * term1 * Math.cos(angle) + Ginf * term2;
       const eta = numeratorEta / denominatorEta;
-      
+
       data.omega.push(omega);
       data.G.push(G);
       data.eta.push(eta);
@@ -161,12 +172,12 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     isothermalTemperatures.forEach(T => {
       const alphaT = calculateAlphaT(T, row);
       if (!alphaT) return;
-      
+
       const isoData = data.omega.map(omega => ({
         x: omega,
         y: omega / alphaT // Original frequency
       }));
-      
+
       data.isotherms.push({
         temperature: T,
         data: isoData
@@ -182,7 +193,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
       if (!row) return [];
       const materialData = generateNomogramData(row);
       if (!materialData) return [];
-      
+
       const color = colors[index % colors.length];
       const datasets = [];
 
@@ -190,9 +201,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
       datasets.push(
         {
           label: `Shear Modulus (${row.name || `Material ${index + 1}`})`,  // Show material name if available
-          data: materialData.G.map((g, i) => ({ 
-            x: materialData.omega[i], 
-            y: g 
+          data: materialData.G.map((g, i) => ({
+            x: materialData.omega[i],
+            y: g
           })),
           borderColor: color,
           borderWidth: 2,
@@ -201,9 +212,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
         },
         {
           label: `Loss Factor (${row.name || `Material ${index + 1}`})`,
-          data: materialData.eta.map((eta, i) => ({ 
-            x: materialData.omega[i], 
-            y: eta 
+          data: materialData.eta.map((eta, i) => ({
+            x: materialData.omega[i],
+            y: eta
           })),
           borderColor: color,
           borderDash: [5, 5],
@@ -235,10 +246,23 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
     <div>
       <h5>Viscoelastic Material</h5>
 
-      <div className="d-flex justify-content-between mb-3"> 
-        <Button variant="primary" onClick={() => append(createEmptyViscoelasticMaterial())}>
-          Add Viscoelastic Material
-        </Button>
+      <div className="d-flex justify-content-between mb-3">
+        <div className="d-flex gap-2">
+          <Button
+            variant="primary"
+            onClick={() => append(createEmptyViscoelasticMaterial())}
+          >
+            Add Viscoelastic Material
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => setShowFitModal(true)}
+          >
+            Fit from Data
+          </Button>
+        </div>
+
         <Button
           variant="danger"
           disabled={!viscoelasticMaterialRows?.some((row) => row.checked)}
@@ -252,7 +276,7 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
         <thead>
           <tr>
             <th>Select</th>
-            <th>Material Name</th> 
+            <th>Material Name</th>
             <th>Working Temperature</th>
             <th>Reference Temperature</th>
             <th>Lower Shear Modulus</th>
@@ -560,9 +584,9 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
                   title: (context) => `Ω: ${context[0].raw.x.toExponential(2)}`,
                   label: (ctx) => {
                     const label = ctx.dataset.label || '';
-                    if (label.includes('Shear')) 
+                    if (label.includes('Shear'))
                       return `${label}: ${ctx.raw.y.toExponential(2)} Pa`;
-                    if (label.includes('Loss')) 
+                    if (label.includes('Loss'))
                       return `${label}: ${ctx.raw.y.toFixed(3)}`;
                     return `${label}: ${ctx.raw.y.toExponential(2)} Hz`;
                   }
@@ -573,8 +597,15 @@ const ViscoelasticMaterial = ({ control, errors, getValues }) => {
           <div className="text-muted small mt-2">
             Isothermal reference lines shown for temperatures: 253K, 273K, 293K, 313K, 333K
           </div>
+
         </div>
       )}
+
+      <FitFromDataModal
+        show={showFitModal}
+        onClose={() => setShowFitModal(false)}
+        appendViscoelasticMaterial={append}
+      />
     </div>
   );
 };
