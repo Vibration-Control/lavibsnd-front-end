@@ -18,36 +18,11 @@ const NeutralizerOptimization = () => {
       primarySystemNaturalFrequencies: [],
       primarySystemModalDamping: [],
       primarySystemModes: [],
-      neutralizers: [
-        /*        {
-                  mass: 0.0,
-                  massTypeUserDefined: true,
-                  optimizationVariables: {
-                    real: [
-                      {
-                        name: 'frequency',
-                        lowerBound: '',
-                        upperBound: '',
-                        discretization: 1000
-                      }
-                    ],
-                    integer: [
-                      { name: 'type', range: [] },
-                      { name: 'modal_position', range: [] },
-                      { name: 'viscoelastic_material', range: [] }
-                    ]
-                  }
-                } */
-      ],
+      neutralizers: [],
       additionalParameters: {
         viscoelasticMaterials: initialMaterials,
         temperatureDetuning: [],
-        userDefinedDynamicStiffnesses: [
-          {
-            name: '',
-            range: []
-          }
-        ],
+        userDefinedDynamicStiffnesses: [],
         PrimarySystemNodePositions: []
       },
       excitationNodeOptimization: '',
