@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Accordion, Button, Container } from 'react-bootstrap';
 import { useForm, FormProvider } from 'react-hook-form';
 import PrimarySystemData from '../components/PrimarySystemData';
-import NeutralizerData from '../components/NeutralizerData';
+import NeutralizerData, { getFieldPath } from '../components/NeutralizerData';
 import CalculationParameters from '../components/CalculationParameters';
 import Results from '../components/Results';
 import { optimizeNeutralizer } from '../services/apiService';
@@ -63,6 +63,15 @@ const NeutralizerOptimization = () => {
 
     return normalizedModes;
   };
+
+  const normalizeModalPositions = (neutralizers) => {
+    neutralizers.forEach((row, index) => {
+        const modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
+        const currentValue = methods.getValues(modalPositionPath)
+        
+        methods.setValue(modalPositionPath, Number(currentValue))
+    })
+  }
 
   const formatPayloadForApi = (input) => {
 
@@ -127,6 +136,7 @@ const NeutralizerOptimization = () => {
     const formValues = methods.getValues();
     const payload = { ...formValues };
     payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes);
+    normalizeModalPositions(payload.neutralizers)
 
     const formatedPayload = formatPayloadForApi(payload)
 

@@ -6,6 +6,15 @@ import TemperatureDetuning from './TemperatureDetuning';
 import DynamicStiffness from './DynamicStiffness';
 import Plot from "react-plotly.js";
 
+const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
+	const array = row?.optimizationVariables?.[arrayType] || [];
+	const childIndex = array.findIndex(item => item.name === childName);
+	if (childIndex === -1) return ''; // optionally throw error
+	return property
+		? `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}.${property}`
+		: `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}`;
+};
+
 const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) => {
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -258,6 +267,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 		indexesToRemove.forEach(index => remove(index))
 	};
+
 	const handleTypeChange = (e, fieldOnChange, rowIndex) => {
 		const selectedValues = Array.from(
 			e.target.selectedOptions,
@@ -265,8 +275,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		);
 
 		fieldOnChange(selectedValues);
-
-		console.log(selectedValues)
 
 		if (!selectedValues.includes(1) && !selectedValues.includes(2)) {
 			setValue(`neutralizers.${rowIndex}.optimizationVariables.real[0].lowerBound`, '');
@@ -300,15 +308,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			]);
 		}
 	};
-	const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
-		const array = row?.optimizationVariables?.[arrayType] || [];
-		const childIndex = array.findIndex(item => item.name === childName);
-		if (childIndex === -1) return ''; // optionally throw error
-		return property
-			? `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}.${property}`
-			: `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}`;
-	};
-
 
 	const parseRange = (range) => {
 		if (!range) return [];
@@ -347,7 +346,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 	const assignNodes = () => {
 
-		if (!selectedNodes.length) return;
+    if (!selectedNodes.length) return;
 
 		const path = `neutralizers.${selectedNeutralizer}.optimizationVariables.integer`;
 
@@ -1066,3 +1065,4 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 };
 
 export default NeutralizerData;
+export { getFieldPath };
