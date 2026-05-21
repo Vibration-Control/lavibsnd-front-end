@@ -65,11 +65,14 @@ const NeutralizerOptimization = () => {
   };
 
   const normalizeModalPositions = (neutralizers) => {
+    let modalPositionPath, currentModalPosition, auxModalPosition
+
     neutralizers.forEach((row, index) => {
-        const modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
-        const currentValue = methods.getValues(modalPositionPath)
-        
-        methods.setValue(modalPositionPath, Number(currentValue))
+        modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
+        currentModalPosition = methods.getValues(modalPositionPath)?.replace(/\[/, '').replace(/\]/, '')
+        auxModalPosition = currentModalPosition.split(',').map(Number)
+
+        methods.setValue(modalPositionPath, auxModalPosition)
     })
   }
 
