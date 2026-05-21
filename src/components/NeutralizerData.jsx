@@ -106,7 +106,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		return property ? child[property] : child;
 	};
 
-
 	const getRulesShapeFactorLower = (rowIndex, isShapeFactorEnabled) => {
 		if (!isShapeFactorEnabled) {
 			return {
@@ -126,7 +125,6 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 			}
 		}
 	}
-
 
 	const getRulesNatFreqLower = (rowIndex, isNatFreqEnabled) => {
 		if (!isNatFreqEnabled) {
@@ -268,7 +266,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 		indexesToRemove.forEach(index => remove(index))
 	};
 
-	const handleTypeChange = (e, fieldOnChange, rowIndex) => {
+	const handleTypeChange = (e, fieldOnChange, row, rowIndex) => {
 		const selectedValues = Array.from(
 			e.target.selectedOptions,
 			option => Number(option.value)
@@ -491,7 +489,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 														as="select"
 														multiple
 														value={field.value}
-														onChange={(e) => handleTypeChange(e, field.onChange, index)}
+														onChange={(e) => handleTypeChange(e, field.onChange, row, index)}
 													>
 														<option value='0'>User Defined Dynamic Stiffness</option>
 														<option value='1'>Viscoelastic</option>

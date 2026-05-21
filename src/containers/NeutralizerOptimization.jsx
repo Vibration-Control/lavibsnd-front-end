@@ -68,11 +68,16 @@ const NeutralizerOptimization = () => {
     let modalPositionPath, currentModalPosition, auxModalPosition
 
     neutralizers.forEach((row, index) => {
-        modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
-        currentModalPosition = methods.getValues(modalPositionPath)?.replace(/\[/, '').replace(/\]/, '')
-        auxModalPosition = currentModalPosition.split(',').map(Number)
+      modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
+      currentModalPosition = methods.getValues(modalPositionPath)
 
-        methods.setValue(modalPositionPath, auxModalPosition)
+      if (typeof currentModalPosition === 'string') {
+        auxModalPosition = currentModalPosition.replace(/\[/, '').replace(/\]/, '').split(',').map(Number)
+      } else {
+        auxModalPosition = currentModalPosition
+      }
+        
+      methods.setValue(modalPositionPath, auxModalPosition)
     })
   }
 
