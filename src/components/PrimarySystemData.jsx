@@ -187,7 +187,10 @@ const PrimarySystemData = ({ control, setValue }) => {
 				</tbody>
 			</Table>
 
-			<PrimarySystemChart control={control} />
+			<PrimarySystemChart
+				control={control}
+				setValue={setValue}
+			/>
 		</div>
 	);
 }

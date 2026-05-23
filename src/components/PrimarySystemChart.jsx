@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import { Button } from 'react-bootstrap'
-import { complex, add, divide, abs, multiply } from 'mathjs'
 
 import {
 	Chart as ChartJS,
@@ -14,7 +13,16 @@ import {
 	Title
 } from 'chart.js'
 
+import annotationPlugin from 'chartjs-plugin-annotation'
+
 import { Line } from 'react-chartjs-2'
+
+import {
+	complex,
+	add,
+	divide,
+	abs
+} from 'mathjs'
 
 ChartJS.register(
 	LineElement,
@@ -23,13 +31,54 @@ ChartJS.register(
 	CategoryScale,
 	Tooltip,
 	Legend,
-	Title
+	Title,
+	annotationPlugin
 )
 
-const PrimarySystemChart = ({ control }) => {
-	const [chartResult, setChartResult] = useState(null)
+const PrimarySystemChart = ({
+	control,
+	setValue
+}) => {
+	const [chartResult, setChartResult] =
+		useState(null)
 
-	const [frfType, setFrfType] = useState('receptance')
+	const [frfType, setFrfType] =
+		useState('receptance')
+
+	const [selectionMode, setSelectionMode] =
+		useState(false)
+
+	const [selectionStep, setSelectionStep] =
+		useState(0)
+
+	const [selectionMessage, setSelectionMessage] =
+		useState('')
+
+	const plotLowerBound =
+		useWatch({
+			control,
+			name: 'plotLowerBound'
+		}) ?? 1
+
+	const plotUpperBound =
+		useWatch({
+			control,
+			name: 'plotUpperBound'
+		}) ?? 60
+
+	const objectiveFunctionSearchLowerBound =
+		useWatch({
+			control,
+			name:
+				'objectiveFunctionSearchLowerBound'
+		}) ?? 10
+
+	const objectiveFunctionSearchUpperBound =
+		useWatch({
+			control,
+			name:
+				'objectiveFunctionSearchUpperBound'
+		}) ?? 30
 
 	const naturalFrequencies =
 		useWatch({
@@ -51,7 +100,9 @@ const PrimarySystemChart = ({ control }) => {
 
 	const parsedModes = useMemo(() => {
 		return modes.map((mode) => {
-			if (Array.isArray(mode)) return mode
+			if (Array.isArray(mode)) {
+				return mode
+			}
 
 			try {
 				return JSON.parse(mode)
@@ -64,105 +115,188 @@ const PrimarySystemChart = ({ control }) => {
 	const responseNode = 0
 	const excitationNode = 0
 
+	const selectionSteps = [
+		{
+			key: 'plotLowerBound',
+			message:
+				'Select Plot Lower Bound'
+		},
+		{
+			key: 'plotUpperBound',
+			message:
+				'Select Plot Upper Bound'
+		},
+		{
+			key:
+				'objectiveFunctionSearchLowerBound',
+			message:
+				'Select Optimization Lower Bound'
+		},
+		{
+			key:
+				'objectiveFunctionSearchUpperBound',
+			message:
+				'Select Optimization Upper Bound'
+		}
+	]
+
 	const isValid = useMemo(() => {
-		if (!naturalFrequencies.length) return false
-		if (!parsedModes.length) return false
+		if (!naturalFrequencies.length)
+			return false
+
+		if (!parsedModes.length)
+			return false
 
 		return naturalFrequencies.every(
 			(freq) =>
 				freq !== '' &&
 				!isNaN(freq)
 		)
-	}, [naturalFrequencies, parsedModes])
+	}, [
+		naturalFrequencies,
+		parsedModes
+	])
 
 	const calculateFRF = () => {
 		const numberOfModes =
 			naturalFrequencies.length
 
 		const minFrequency =
-			Math.min(...naturalFrequencies) * 0.8
+			Math.min(
+				...naturalFrequencies
+			) * 0.8
 
 		const maxFrequency =
-			Math.max(...naturalFrequencies) * 1.2
+			Math.max(
+				...naturalFrequencies
+			) * 1.2
 
 		const frequencyDiscretization = 1000
 
 		const frequencies = Array.from(
-			{ length: frequencyDiscretization },
+			{
+				length:
+					frequencyDiscretization
+			},
 			(_, i) =>
 				minFrequency +
-				((maxFrequency - minFrequency) * i) /
-				(frequencyDiscretization - 1)
+				((maxFrequency -
+					minFrequency) *
+					i) /
+				(frequencyDiscretization -
+					1)
 		)
 
-		const frf = frequencies.map((frequency) => {
-			const omega =
-				2 * Math.PI * frequency
+		const receptance =
+			frequencies.map(
+				(frequency) => {
+					const omega =
+						2 *
+						Math.PI *
+						frequency
 
-			let receptance = complex(0, 0)
+					let frf =
+						complex(0, 0)
 
-			for (let j = 0; j < numberOfModes; j++) {
-				const fn =
-					naturalFrequencies[j]
+					for (
+						let j = 0;
+						j < numberOfModes;
+						j++
+					) {
+						const fn =
+							naturalFrequencies[j]
 
-				const zeta =
-					modalDamping[j] || 0
+						const zeta =
+							modalDamping[j] ||
+							0
 
-				const omegaN =
-					2 * Math.PI * fn
+						const omegaN =
+							2 *
+							Math.PI *
+							fn
 
-				const phiR =
-					parsedModes[j]?.[responseNode] ?? 0
+						const phiR =
+							parsedModes[j]?.[
+							responseNode
+							] ?? 0
 
-				const phiE =
-					parsedModes[j]?.[excitationNode] ?? 0
+						const phiE =
+							parsedModes[j]?.[
+							excitationNode
+							] ?? 0
 
-				// Modal denominator:
-				// (ωn² - ω²) + i(2ζωnω)
+						const denominator =
+							complex(
+								omegaN *
+								omegaN -
+								omega *
+								omega,
 
-				const denominator = complex(
-					omegaN * omegaN -
-					omega * omega,
+								2 *
+								zeta *
+								omegaN *
+								omega
+							)
 
-					2 *
-					zeta *
-					omegaN *
-					omega
-				)
+						const modalContribution =
+							phiR * phiE
 
-				const modalContribution =
-					phiR * phiE
+						const modalFRF =
+							divide(
+								modalContribution,
+								denominator
+							)
 
-				const modalFRF = divide(
-					modalContribution,
-					denominator
-				)
+						frf = add(
+							frf,
+							modalFRF
+						)
+					}
 
-				receptance = add(
-					receptance,
-					modalFRF
-				)
-			}
+					const magnitude =
+						abs(frf)
 
-			let magnitude = abs(receptance)
+					const db =
+						20 *
+						Math.log10(
+							magnitude ||
+							1e-16
+						)
 
-			const db =
-				20 *
-				Math.log10(
-					magnitude || 1e-16
-				)
-
-			return db
-		})
+					return db
+				}
+			)
 
 		setChartResult({
 			frequencies,
-			receptance: frf
+			receptance,
+			minFrequency,
+			maxFrequency
 		})
 	}
 
 	const removeChart = () => {
 		setChartResult(null)
+
+		stopSelectionMode()
+	}
+
+	const startSelectionMode = () => {
+		setSelectionMode(true)
+
+		setSelectionStep(0)
+
+		setSelectionMessage(
+			selectionSteps[0].message
+		)
+	}
+
+	const stopSelectionMode = () => {
+		setSelectionMode(false)
+
+		setSelectionStep(0)
+
+		setSelectionMessage('')
 	}
 
 	const chartData = useMemo(() => {
@@ -172,16 +306,23 @@ const PrimarySystemChart = ({ control }) => {
 			chartResult.receptance.map(
 				(value, index) => {
 					const frequency =
-						chartResult.frequencies[index]
+						chartResult
+							.frequencies[
+						index
+						]
 
 					const omega =
 						2 *
 						Math.PI *
 						frequency
 
-					let transformedValue = value
+					let transformedValue =
+						value
 
-					if (frfType === 'mobility') {
+					if (
+						frfType ===
+						'mobility'
+					) {
 						transformedValue =
 							value +
 							20 *
@@ -190,7 +331,10 @@ const PrimarySystemChart = ({ control }) => {
 							)
 					}
 
-					if (frfType === 'inertance') {
+					if (
+						frfType ===
+						'inertance'
+					) {
 						transformedValue =
 							value +
 							40 *
@@ -204,13 +348,21 @@ const PrimarySystemChart = ({ control }) => {
 			)
 
 		return {
-			labels: chartResult.frequencies,
-
 			datasets: [
 				{
 					label: `Primary System ${frfType}`,
 
-					data: transformedFRF,
+					parsing: false,
+
+					data:
+						chartResult.frequencies.map(
+							(frequency, index) => ({
+								x: Number(frequency),
+								y: Number(
+									transformedFRF[index]
+								)
+							})
+						),
 
 					borderColor:
 						'rgba(75,192,192,1)',
@@ -227,89 +379,272 @@ const PrimarySystemChart = ({ control }) => {
 		}
 	}, [chartResult, frfType])
 
-	const chartOptions = useMemo(() => ({
-		responsive: true,
-		maintainAspectRatio: false,
+	const handleChartClick = (
+		event,
+		elements,
+		chart
+	) => {
+		if (!selectionMode) return
 
-		plugins: {
-			legend: {
-				position: 'top'
-			},
+		if (!elements.length) return
 
-			tooltip: {
-				mode: 'index',
-				intersect: false
-			}
-		},
+		const element = elements[0]
 
-		scales: {
-			x: {
-				title: {
-					display: true,
-					text: 'Frequency (Hz)'
+		const index = element.index
+
+		const clickedFrequency =
+			chart.data.datasets[0]
+				.data[index].x
+
+		const currentStep =
+			selectionSteps[
+			selectionStep
+			]
+
+		setValue(
+			currentStep.key,
+			clickedFrequency
+		)
+
+		const nextStep =
+			selectionStep + 1
+
+		if (
+			nextStep >=
+			selectionSteps.length
+		) {
+			stopSelectionMode()
+			return
+		}
+
+		setSelectionStep(nextStep)
+
+		setSelectionMessage(
+			selectionSteps[nextStep]
+				.message
+		)
+	}
+
+	const chartOptions = useMemo(
+		() => ({
+			responsive: true,
+
+			maintainAspectRatio: false,
+
+			onClick:
+				handleChartClick,
+
+			plugins: {
+				legend: {
+					position: 'top'
 				},
 
-				ticks: {
-					callback: function (
-						value,
-						index,
-						ticks
-					) {
-						const totalTicks = 20
+				tooltip: {
+					mode: 'index',
+					intersect: false
+				},
 
-						const step =
-							Math.floor(
-								ticks.length /
-								totalTicks
-							)
+				annotation: {
+					annotations: {
+						plotLowerBound: {
+							type: 'line',
 
-						return index % step === 0
-							? this.getLabelForValue(
-								value
-							)
-							: ''
-					},
+							xMin:
+								plotLowerBound,
 
-					autoSkip: false
+							xMax:
+								plotLowerBound,
+
+							borderColor:
+								'green',
+
+							borderWidth: 2,
+
+							label: {
+								display: true,
+
+								content:
+									'Plot Lower'
+							}
+						},
+
+						plotUpperBound: {
+							type: 'line',
+
+							xMin:
+								plotUpperBound,
+
+							xMax:
+								plotUpperBound,
+
+							borderColor:
+								'green',
+
+							borderWidth: 2,
+
+							label: {
+								display: true,
+
+								content:
+									'Plot Upper'
+							}
+						},
+
+						controlLowerBound: {
+							type: 'line',
+
+							xMin:
+								objectiveFunctionSearchLowerBound,
+
+							xMax:
+								objectiveFunctionSearchLowerBound,
+
+							borderColor:
+								'red',
+
+							borderWidth: 2,
+
+							label: {
+								display: true,
+
+								content:
+									'Control Lower'
+							}
+						},
+
+						controlUpperBound: {
+							type: 'line',
+
+							xMin:
+								objectiveFunctionSearchUpperBound,
+
+							xMax:
+								objectiveFunctionSearchUpperBound,
+
+							borderColor:
+								'red',
+
+							borderWidth: 2,
+
+							label: {
+								display: true,
+
+								content:
+									'Control Upper'
+							}
+						}
+					}
 				}
 			},
 
-			y: {
-				title: {
-					display: true,
+			scales: {
+				x: {
+					type: 'linear',
 
-					text:
-						frfType === 'receptance'
-							? 'Receptance (dB) ref. 1[m/N]'
-							: frfType ===
-								'mobility'
-								? 'Mobility (dB) ref. 1[m/s/N]'
-								: 'Inertance (dB) ref. 1[m/s²/N]'
+					offset: false,
+
+					min: Number(
+						chartResult?.minFrequency
+					),
+
+					max: Number(
+						chartResult?.maxFrequency
+					),
+
+					title: {
+						display: true,
+						text: 'Frequency (Hz)'
+					},
+
+					ticks: {
+						precision: 2
+					}
+				},
+
+				y: {
+					title: {
+						display: true,
+
+						text:
+							frfType ===
+								'receptance'
+								? 'Receptance (dB) ref. 1[m/N]'
+								: frfType ===
+									'mobility'
+									? 'Mobility (dB) ref. 1[m/s/N]'
+									: 'Inertance (dB) ref. 1[m/s²/N]'
+					}
 				}
 			}
-		}
-	}), [frfType])
+		}),
+		[
+			frfType,
+			plotLowerBound,
+			plotUpperBound,
+			objectiveFunctionSearchLowerBound,
+			objectiveFunctionSearchUpperBound,
+			selectionMode,
+			selectionStep
+		]
+	)
 
 	return (
 		<div className="mt-4">
 			<div className="d-flex gap-2 mb-3">
 				<Button
 					variant="primary"
-					onClick={calculateFRF}
+					onClick={
+						calculateFRF
+					}
 					disabled={!isValid}
 				>
 					Plot FRF
 				</Button>
 
 				{chartResult && (
-					<Button
-						variant="danger"
-						onClick={removeChart}
-					>
-						Remove Chart
-					</Button>
+					<>
+						<Button
+							variant="danger"
+							onClick={
+								removeChart
+							}
+						>
+							Remove Chart
+						</Button>
+
+						<Button
+							variant={
+								selectionMode
+									? 'danger'
+									: 'warning'
+							}
+							onClick={() => {
+								if (
+									selectionMode
+								) {
+									stopSelectionMode()
+								} else {
+									startSelectionMode()
+								}
+							}}
+						>
+							{selectionMode
+								? 'Stop Selection'
+								: 'Select Bounds'}
+						</Button>
+					</>
 				)}
 			</div>
+
+			{selectionMode && (
+				<div className="alert alert-info">
+					<strong>
+						{
+							selectionMessage
+						}
+					</strong>
+				</div>
+			)}
 
 			{chartResult && (
 				<>
@@ -325,9 +660,13 @@ const PrimarySystemChart = ({ control }) => {
 									frfType ===
 									'receptance'
 								}
-								onChange={(e) =>
+								onChange={(
+									e
+								) =>
 									setFrfType(
-										e.target.value
+										e
+											.target
+											.value
 									)
 								}
 							/>
@@ -351,9 +690,13 @@ const PrimarySystemChart = ({ control }) => {
 									frfType ===
 									'mobility'
 								}
-								onChange={(e) =>
+								onChange={(
+									e
+								) =>
 									setFrfType(
-										e.target.value
+										e
+											.target
+											.value
 									)
 								}
 							/>
@@ -377,9 +720,13 @@ const PrimarySystemChart = ({ control }) => {
 									frfType ===
 									'inertance'
 								}
-								onChange={(e) =>
+								onChange={(
+									e
+								) =>
 									setFrfType(
-										e.target.value
+										e
+											.target
+											.value
 									)
 								}
 							/>
@@ -397,12 +744,17 @@ const PrimarySystemChart = ({ control }) => {
 						<div
 							className="card-body"
 							style={{
-								height: '500px'
+								height:
+									'500px'
 							}}
 						>
 							<Line
-								data={chartData}
-								options={chartOptions}
+								data={
+									chartData
+								}
+								options={
+									chartOptions
+								}
 							/>
 						</div>
 					</div>
