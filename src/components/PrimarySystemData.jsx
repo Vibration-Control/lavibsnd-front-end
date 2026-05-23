@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
+import PrimarySystemChart from './PrimarySystemChart'
 
 const PrimarySystemData = ({ control, setValue }) => {
 	const { fields: checkFields, append: appendCheck, remove: removeCheck } = useFieldArray({
@@ -8,16 +9,16 @@ const PrimarySystemData = ({ control, setValue }) => {
 		name: 'primarySystemChecks'
 	})
 
-	const checks = (useWatch({ control, name:'primarySystemChecks' }) || [])
-	const naturalFrequencies = (useWatch({ control, name: 'primarySystemNaturalFrequencies'}) || [])
-	const modalDamping = (useWatch({ control, name: 'primarySystemModalDamping'}) || [])
-	const modes = (useWatch({ control, name: 'primarySystemModes'}) || [])
+	const checks = (useWatch({ control, name: 'primarySystemChecks' }) || [])
+	const naturalFrequencies = (useWatch({ control, name: 'primarySystemNaturalFrequencies' }) || [])
+	const modalDamping = (useWatch({ control, name: 'primarySystemModalDamping' }) || [])
+	const modes = (useWatch({ control, name: 'primarySystemModes' }) || [])
 
 	useEffect(() => {
 		const maxLength = Math.max(naturalFrequencies.length, modalDamping.length, modes.length)
 
 		if ((!checks) || (checks.length < maxLength)) {
-			const newChecks = Array(maxLength).fill().map((_, index) => checks?.[index] || {value: false})
+			const newChecks = Array(maxLength).fill().map((_, index) => checks?.[index] || { value: false })
 
 			setValue('primarySystemChecks', newChecks)
 		}
@@ -34,7 +35,7 @@ const PrimarySystemData = ({ control, setValue }) => {
 	const modesRules = {
 		required: 'This field is required',
 		validate: (modes) => {
-			let modesArray 
+			let modesArray
 			if (Array.isArray(modes)) {
 				modesArray = modes
 			} else {
@@ -45,9 +46,9 @@ const PrimarySystemData = ({ control, setValue }) => {
 		}
 	}
 	const parseValue = (value) => {
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? '' : parsed;
-  };
+		const parsed = parseFloat(value);
+		return isNaN(parsed) ? '' : parsed;
+	};
 
 	const removeSelectedRows = () => {
 		const newChecks = [...checks]
@@ -67,7 +68,7 @@ const PrimarySystemData = ({ control, setValue }) => {
 	};
 
 	const appendEmptyRow = () => {
-		appendCheck({value: false})
+		appendCheck({ value: false })
 		setValue('primarySystemNaturalFrequencies', [...naturalFrequencies, ''])
 		setValue('primarySystemModalDamping', [...modalDamping, ''])
 		setValue('primarySystemModes', [...modes, ''])
@@ -99,7 +100,7 @@ const PrimarySystemData = ({ control, setValue }) => {
 				</thead>
 				<tbody>
 					{checkFields.map((checkField, index) => (
-						<tr key={checkField.id}>	
+						<tr key={checkField.id}>
 							<td>
 								<Controller
 									name={`primarySystemChecks.${index}.value`}
@@ -163,7 +164,7 @@ const PrimarySystemData = ({ control, setValue }) => {
 								<Controller
 									name={`primarySystemModes.${index}`}
 									control={control}
-									rules = {modesRules}
+									rules={modesRules}
 									defaultValue=''
 									render={({ field, fieldState }) => (
 										<>
@@ -185,6 +186,8 @@ const PrimarySystemData = ({ control, setValue }) => {
 					))}
 				</tbody>
 			</Table>
+
+			<PrimarySystemChart control={control} />
 		</div>
 	);
 }
