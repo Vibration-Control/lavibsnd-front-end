@@ -129,10 +129,10 @@ const chartData = useMemo(() => {
           display: true,
           text:
             frfType === 'receptance'
-              ? 'Receptance (dB)'
+              ? 'Receptance (dB) ref. 1[m/N]'
               : frfType === 'mobility'
-                ? 'Mobility (dB)'
-                : 'Inertance (dB)',
+                ? 'Mobility (dB) ref. 1[m/s/N]'
+                : 'Inertance (dB) ref. 1[m/s²/N]',
         },
       },
     },

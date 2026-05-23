@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { Hourglass } from 'lucide-react';
 import { Accordion, Button, Container } from 'react-bootstrap';
 import { useForm, FormProvider } from 'react-hook-form';
 import PrimarySystemData from '../components/PrimarySystemData';
@@ -12,6 +13,16 @@ const NeutralizerOptimization = () => {
   const [optimizationResult, setOptimizationResult] = useState(null);
   const [fileHandle, setFileHandle] = useState(null); // will store FileSystemFileHandle
   const [fileName, setFileName] = useState(null); // store file name for display/fallback
+
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [completed, setCompleted] = useState(false);
+  const [totalTime, setTotalTime] = useState(null);
+  const [cancelled, setCancelled] = useState(false);
+
+  const intervalRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const activeRequestRef = useRef(null);
 
   const methods = useForm({
     defaultValues: {
@@ -47,6 +58,7 @@ const NeutralizerOptimization = () => {
 
   const { setValue } = methods;
 
+
   const normalizePrimarySystemModes = (modes) => {
     const normalizedModes = [];
     let processingModes, auxMode;
@@ -66,10 +78,10 @@ const NeutralizerOptimization = () => {
 
   const normalizeModalPositions = (neutralizers) => {
     neutralizers.forEach((row, index) => {
-        const modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
-        const currentValue = methods.getValues(modalPositionPath)
-        
-        methods.setValue(modalPositionPath, Number(currentValue))
+      const modalPositionPath = getFieldPath('integer', row, 'modal_position', index, 'range')
+      const currentValue = methods.getValues(modalPositionPath)
+
+      methods.setValue(modalPositionPath, Number(currentValue))
     })
   }
 
@@ -131,22 +143,77 @@ const NeutralizerOptimization = () => {
     }
     return traverse(input)
   }
+  const startTimer = () => {
+    startTimeRef.current = Date.now();
+    setElapsedTime(0);
+
+    intervalRef.current = setInterval(() => {
+      const diff = Date.now() - startTimeRef.current;
+      setElapsedTime(diff);
+    }, 100);
+  };
+
+  const stopTimer = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    const final = Date.now() - startTimeRef.current;
+    setTotalTime(final);
+  };
 
   const onOptimize = async () => {
+    const requestId = Date.now();
+    activeRequestRef.current = requestId;
+
+    setIsOptimizing(true);
+    setCancelled(false);
+    setCompleted(false);
+    setTotalTime(null);
+
+    startTimer();
+
     const formValues = methods.getValues();
     const payload = { ...formValues };
-    payload.primarySystemModes = normalizePrimarySystemModes(payload.primarySystemModes);
-    normalizeModalPositions(payload.neutralizers)
 
-    const formatedPayload = formatPayloadForApi(payload)
+    payload.primarySystemModes = normalizePrimarySystemModes(
+      payload.primarySystemModes
+    );
+
+    normalizeModalPositions(payload.neutralizers);
+
+    const formatedPayload = formatPayloadForApi(payload);
 
     try {
       const result = await optimizeNeutralizer(formatedPayload);
-      console.log('Optimization result:', result);
+
+      if (activeRequestRef.current !== requestId) return;
+
       setOptimizationResult(result);
+      setCompleted(true);
+      setCancelled(false);
+
+      // hide checkmark after 5s
+      setTimeout(() => setCompleted(false), 5000);
+
     } catch (error) {
-      console.error('Optimization failed:', error);
+      if (activeRequestRef.current !== requestId) return;
+      console.error(error);
+    } finally {
+      if (activeRequestRef.current === requestId) {
+        setIsOptimizing(false);
+        activeRequestRef.current = null;
+        stopTimer();
+      }
     }
+  };
+
+  const cancelOptimization = () => {
+    activeRequestRef.current = null;
+
+    setIsOptimizing(false);
+    stopTimer();
+
+    setCancelled(true);
+    setCompleted(false);
   };
 
   /**
@@ -334,10 +401,84 @@ const NeutralizerOptimization = () => {
 
           </div>
 
-          <div>
-            <Button variant="info" onClick={onOptimize}>
-              Optimize
+          <div className="d-flex align-items-center gap-3 flex-wrap">
+
+            {/* OPTIMIZE BUTTON */}
+            <Button
+              variant="info"
+              onClick={onOptimize}
+              disabled={isOptimizing}
+            >
+              {isOptimizing ? (
+                <span className="d-flex align-items-center gap-2">
+                  <span className="spinner-border spinner-border-sm" />
+                  Running...
+                </span>
+              ) : (
+                'Optimize'
+              )}
             </Button>
+
+            {/* CANCEL BUTTON */}
+            {isOptimizing && (
+              <Button
+                variant="danger"
+                onClick={cancelOptimization}
+              >
+                Cancel
+              </Button>
+            )}
+
+            {/* LIVE TIMER */}
+            {isOptimizing && (
+              <div
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '14px',
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  background: '#0d1117',
+                  color: '#00ff88',
+                  minWidth: '120px',
+                  textAlign: 'center',
+                  boxShadow: '0 0 10px rgba(0,255,136,0.25)'
+                }}
+              >
+                ⏱ {(elapsedTime / 1000).toFixed(1)}s
+              </div>
+            )}
+
+            {/* COMPLETED STATE */}
+            {completed && !isOptimizing && !cancelled && (
+              <div
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  background: '#e8f5e9',
+                  color: '#1b5e20',
+                  fontWeight: 600,
+                  animation: 'fadeOut 5s forwards'
+                }}
+              >
+                ✔ Done in {(totalTime / 1000).toFixed(2)}s
+              </div>
+            )}
+
+            {/* CANCELLED STATE */}
+            {cancelled && totalTime !== null && (
+              <div
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  background: '#ffebee',
+                  color: '#b71c1c',
+                  fontWeight: 600
+                }}
+              >
+                ✖ Cancelled after {(totalTime / 1000).toFixed(2)}s
+              </div>
+            )}
+
           </div>
         </div>
 
