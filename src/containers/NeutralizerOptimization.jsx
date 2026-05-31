@@ -529,7 +529,7 @@ const NeutralizerOptimization = () => {
           <Accordion.Item eventKey="3">
             <Accordion.Header>Results</Accordion.Header>
             <Accordion.Body>
-              <Results optimizationResult={optimizationResult} />
+              <Results optimizationResult={optimizationResult} control={methods.control} />
             </Accordion.Body>
           </Accordion.Item>
         </Accordion>

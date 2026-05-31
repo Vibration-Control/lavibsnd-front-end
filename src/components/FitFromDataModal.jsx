@@ -5,7 +5,12 @@ import Chart from "chart.js/auto";
 
 const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
   const [dataRows, setDataRows] = useState([
-    { temperature: "", frequency: "", shear: "" }
+    {
+      temperature: "",
+      frequency: "",
+      shear: "",
+      lossFactor: ""
+    }
   ]);
 
   const [fitResult, setFitResult] = useState(null);
@@ -61,6 +66,32 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
     );
   };
 
+  const computeLossModulus = (omega, p) => {
+    const { G0, Ginf, b, alpha } = p;
+
+    if (omega <= 0) return null;
+
+    const bOmega = b * omega;
+    const angle = (alpha * Math.PI) / 2;
+
+    const t1 = Math.pow(bOmega, alpha);
+    const t2 = Math.pow(bOmega, 2 * alpha);
+
+    return (
+      ((Ginf - G0) * t1 * Math.sin(angle)) /
+      (1 + 2 * t1 * Math.cos(angle) + t2)
+    );
+  };
+
+  const computeLossFactor = (omega, p) => {
+    const Gp = computeShearModulus(omega, p);
+    const Gpp = computeLossModulus(omega, p);
+
+    if (!Gp || Gp <= 0) return null;
+
+    return Gpp / Gp;
+  };
+
   // -----------------------------
   // FIT (ASYNC + PROGRESS)
   // -----------------------------
@@ -69,40 +100,66 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
       .map((r) => ({
         T: parseFloat(r.temperature),
         omega: parseFloat(r.frequency),
-        G: parseFloat(r.shear)
+        G: parseFloat(r.shear),
+        eta: parseFloat(r.lossFactor)
       }))
-      .filter((r) => r.T && r.omega > 0 && r.G > 0);
-
-    if (data.length < 5) return null;
-
+      .filter(
+        (r) =>
+          r.T &&
+          r.omega > 0 &&
+          (
+            (Number.isFinite(r.G) && r.G > 0) ||
+            (Number.isFinite(r.eta) && r.eta > 0)
+          )
+      );
     const T0 = data[0].T;
 
     const chi2 = (p) => {
       let err = 0;
 
-      for (const { T, omega, G } of data) {
+      for (const { T, omega, G, eta } of data) {
         const aT = calculateAlphaT(T, { ...p, T0 });
+
         if (!aT || aT <= 0) return 1e12;
 
-        const Gm = computeShearModulus(omega * aT, p);
-        if (!Gm || Gm <= 0) return 1e12;
+        const reducedOmega = omega * aT;
 
-        const d = Math.log(Gm) - Math.log(G);
-        err += d * d;
+        if (Number.isFinite(G) && G > 0) {
+          const Gm = computeShearModulus(reducedOmega, p);
+
+          if (!Gm || Gm <= 0) return 1e12;
+
+          const dG = Math.log(Gm) - Math.log(G);
+
+          err += dG * dG;
+        }
+
+        if (Number.isFinite(eta) && eta > 0) {
+          const etaM = computeLossFactor(reducedOmega, p);
+
+          if (!etaM || etaM <= 0) return 1e12;
+
+          const dEta = Math.log(etaM) - Math.log(eta);
+
+          err += dEta * dEta;
+        }
       }
 
       return err;
     };
 
+    const validG = data
+      .filter((d) => Number.isFinite(d.G) && d.G > 0)
+      .map((d) => d.G);
+
     let best = {
-      G0: Math.min(...data.map((d) => d.G)),
-      Ginf: Math.max(...data.map((d) => d.G)),
+      G0: validG.length ? Math.min(...validG) : 1e5,
+      Ginf: validG.length ? Math.max(...validG) : 1e9,
       b: 1,
       alpha: 0.5,
       theta1: 10,
       theta2: 100
     };
-
     let bestErr = chi2(best);
 
     const iterations = 50000;
@@ -153,7 +210,15 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
   };
 
   const addRow = () =>
-    setDataRows([...dataRows, { temperature: "", frequency: "", shear: "" }]);
+    setDataRows([
+      ...dataRows,
+      {
+        temperature: "",
+        frequency: "",
+        shear: "",
+        lossFactor: ""
+      }
+    ]);
 
   const removeRow = (i) =>
     setDataRows(dataRows.filter((_, idx) => idx !== i));
@@ -168,7 +233,7 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
   // CHART
   // -----------------------------
   const getChartData = () => {
-    const exp = dataRows
+    const modulusExp = dataRows
       .map((r) => {
         const T = parseFloat(r.temperature);
         const w = parseFloat(r.frequency);
@@ -176,36 +241,77 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
 
         if (!T || !w || !G) return null;
 
-        if (!fitResult) return { x: w, y: G };
+        const x = fitResult
+          ? w * calculateAlphaT(T, fitResult)
+          : w;
 
-        const aT = calculateAlphaT(T, fitResult);
-        return { x: w * aT, y: G };
+        return {
+          x,
+          y: G
+        };
       })
-      .filter((p) => p && p.x > 0 && p.y > 0);
+      .filter(Boolean);
+
+    const lossExp = dataRows
+      .map((r) => {
+        const T = parseFloat(r.temperature);
+        const w = parseFloat(r.frequency);
+        const eta = parseFloat(r.lossFactor);
+
+        if (!T || !w || !eta) return null;
+
+        const x = fitResult
+          ? w * calculateAlphaT(T, fitResult)
+          : w;
+
+        return {
+          x,
+          y: eta
+        };
+      })
+      .filter(Boolean);
 
     const datasets = [
       {
-        label: "Experimental Data",
-        data: exp,
-        showLine: false
+        label: "Experimental Shear Modulus",
+        data: modulusExp,
+        showLine: false,
+        yAxisID: "yModulus"
+      },
+      {
+        label: "Experimental Loss Factor",
+        data: lossExp,
+        showLine: false,
+        yAxisID: "yLoss"
       }
     ];
 
     if (fitResult) {
-      const freq = Array.from({ length: 200 }, (_, i) =>
-        Math.pow(10, -10 + (i / 199) * 20)
+      const freq = Array.from(
+        { length: 200 },
+        (_, i) => Math.pow(10, -10 + (i / 199) * 20)
       );
 
-      const model = freq.map((f) => ({
-        x: f,
-        y: computeShearModulus(f, fitResult)
-      }));
+      datasets.push({
+        label: "Fitted Shear Modulus",
+        data: freq.map((f) => ({
+          x: f,
+          y: computeShearModulus(f, fitResult)
+        })),
+        pointRadius: 0,
+        borderWidth: 2,
+        yAxisID: "yModulus"
+      });
 
       datasets.push({
-        label: "Fitted Master Curve",
-        data: model,
+        label: "Fitted Loss Factor",
+        data: freq.map((f) => ({
+          x: f,
+          y: computeLossFactor(f, fitResult)
+        })),
         pointRadius: 0,
-        borderWidth: 2
+        borderWidth: 2,
+        yAxisID: "yLoss"
       });
     }
 
@@ -229,6 +335,7 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
                   <th>Temperature [K]</th>
                   <th>Frequency [Hz]</th>
                   <th>Shear Modulus [Pa]</th>
+                  <th>Loss Factor [-]</th>
                   <th></th>
                 </tr>
               </thead>
@@ -251,6 +358,14 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
                       <Form.Control
                         value={row.shear}
                         onChange={(e) => updateRow(i, "shear", e.target.value)}
+                      />
+                    </td>
+                    <td>
+                      <Form.Control
+                        value={row.lossFactor}
+                        onChange={(e) =>
+                          updateRow(i, "lossFactor", e.target.value)
+                        }
                       />
                     </td>
                     <td>
@@ -304,11 +419,31 @@ const FitFromDataModal = ({ show, onClose, appendViscoelasticMaterial }) => {
               scales: {
                 x: {
                   type: "logarithmic",
-                  title: { display: true, text: "Reduced Frequency" }
+                  title: {
+                    display: true,
+                    text: "Reduced Frequency"
+                  }
                 },
-                y: {
+
+                yModulus: {
                   type: "logarithmic",
-                  title: { display: true, text: "Shear Modulus" }
+                  position: "left",
+                  title: {
+                    display: true,
+                    text: "Shear Modulus [Pa]"
+                  }
+                },
+
+                yLoss: {
+                  type: "linear",
+                  position: "right",
+                  title: {
+                    display: true,
+                    text: "Loss Factor [-]"
+                  },
+                  grid: {
+                    drawOnChartArea: false
+                  }
                 }
               }
             }}

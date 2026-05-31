@@ -1,142 +1,270 @@
 import React, { useState, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
+import { useWatch } from 'react-hook-form'
 import DimensionNeutralizers from './DimensionNeutralizers'; // ajuste o caminho se necessário
-import './Results.css'; // Import custom CSS
+import './Results.css'; // Import cust
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Title,
+} from 'chart.js';
 
-const Results = ({ optimizationResult }) => {
+import annotationPlugin from 'chartjs-plugin-annotation';
+
+ChartJS.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Tooltip,
+  Legend,
+  Title,
+  annotationPlugin
+);
+
+const Results = ({ optimizationResult, control }) => {
   const [showFullResponse, setShowFullResponse] = useState(false);
   const [showNeutralizers, setShowNeutralizers] = useState(false);
   const [frfType, setFrfType] = useState('receptance'); // 'receptance' | 'mobility' | 'inertance'
   const [showDimensionNeutralizers, setShowDimensionNeutralizers] = useState(false);
+  const [showControlBounds, setShowControlBounds] = useState(true);
 
+  const objectiveFunctionSearchLowerBound =
+    useWatch({
+      control,
+      name:
+        'objectiveFunctionSearchLowerBound'
+    }) ?? 10
 
-const chartData = useMemo(() => {
-  if (!optimizationResult) return null;
+  const objectiveFunctionSearchUpperBound =
+    useWatch({
+      control,
+      name:
+        'objectiveFunctionSearchUpperBound'
+    }) ?? 30
 
-  const frequencies = optimizationResult.frequency;
-  let primaryFRF = optimizationResult.primary_system_frf;
-  let composedFRF = optimizationResult.composed_system_frf;
+  const chartData = useMemo(() => {
+    if (!optimizationResult) return null;
 
-  if (frfType === 'mobility') {
-    primaryFRF = primaryFRF.map((val, i) =>
-      val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-    );
-    composedFRF = composedFRF.map((val, i) =>
-      val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-    );
-  } else if (frfType === 'inertance') { 
-    primaryFRF = primaryFRF.map((val, i) =>
-      val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-    );
-    composedFRF = composedFRF.map((val, i) =>
-      val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-    );
-  }
+    const frequencies = optimizationResult.frequency;
+    let primaryFRF = optimizationResult.primary_system_frf;
+    let composedFRF = optimizationResult.composed_system_frf;
 
-  // Main datasets
-  const datasets = [
-    {
-      label: 'Primary System',
-      data: primaryFRF,
-      borderColor: 'rgba(75,192,192,1)',
-      borderWidth: 2,
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-    },
-    {
-      label: 'Composed System',
-      data: composedFRF,
-      borderColor: 'rgba(153,102,255,1)',
-      borderWidth: 2,
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-    },
-  ];
+    if (frfType === 'mobility') {
+      primaryFRF = primaryFRF.map((val, i) =>
+        val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+      );
+      composedFRF = composedFRF.map((val, i) =>
+        val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+      );
+    } else if (frfType === 'inertance') {
+      primaryFRF = primaryFRF.map((val, i) =>
+        val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+      );
+      composedFRF = composedFRF.map((val, i) =>
+        val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+      );
+    }
 
-  // Add detuned receptances with visually distinct colors
-  if (optimizationResult.receptances_with_detuning) {
-    const n = optimizationResult.receptances_with_detuning.length;
-    optimizationResult.receptances_with_detuning.forEach((item, idx) => {
-      let detunedFRF = item.receptance;
-
-      // Apply mobility/inertance conversion if needed
-      if (frfType === 'mobility') {
-        detunedFRF = detunedFRF.map((val, i) =>
-          val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-        );
-      } else if (frfType === 'inertance') {
-        detunedFRF = detunedFRF.map((val, i) =>
-          val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
-        );
-      }
-
-      // Generate a distinct HSL color
-      const hue = Math.round((idx / n) * 360); // evenly spaced hue
-      const color = `hsl(${hue}, 80%, 50%)`;
-
-      datasets.push({
-        label: `Composed System detuned at ${item.temperature} K`,
-        data: detunedFRF,
-        borderColor: color,
+    // Main datasets
+    const datasets = [
+      {
+        label: 'Primary System',
+        data: primaryFRF,
+        borderColor: 'rgba(75,192,192,1)',
         borderWidth: 2,
         fill: false,
         tension: 0.2,
         pointRadius: 0,
-        borderDash: [5, 5],
+      },
+      {
+        label: 'Composed System',
+        data: composedFRF,
+        borderColor: 'rgba(153,102,255,1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.2,
+        pointRadius: 0,
+      },
+    ];
+
+    // Add detuned receptances with visually distinct colors
+    if (optimizationResult.receptances_with_detuning) {
+      const n = optimizationResult.receptances_with_detuning.length;
+      optimizationResult.receptances_with_detuning.forEach((item, idx) => {
+        let detunedFRF = item.receptance;
+
+        // Apply mobility/inertance conversion if needed
+        if (frfType === 'mobility') {
+          detunedFRF = detunedFRF.map((val, i) =>
+            val !== 0 ? val + 20 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+          );
+        } else if (frfType === 'inertance') {
+          detunedFRF = detunedFRF.map((val, i) =>
+            val !== 0 ? val + 40 * Math.log10(2 * Math.PI * frequencies[i]) : 0
+          );
+        }
+
+        // Generate a distinct HSL color
+        const hue = Math.round((idx / n) * 360); // evenly spaced hue
+        const color = `hsl(${hue}, 80%, 50%)`;
+
+        datasets.push({
+          label: `Composed System detuned at ${item.temperature} K`,
+          data: detunedFRF,
+          borderColor: color,
+          borderWidth: 2,
+          fill: false,
+          tension: 0.2,
+          pointRadius: 0,
+          borderDash: [5, 5],
+        });
       });
+    }
+
+    return {
+      datasets: datasets.map((dataset) => ({
+        ...dataset,
+        parsing: false,
+        data: frequencies.map((frequency, index) => ({
+          x: Number(frequency),
+          y: Number(dataset.data[index]),
+        })),
+      })),
+    };
+  }, [optimizationResult, frfType]);
+
+  const handleDownloadResults = () => {
+    if (!optimizationResult) return;
+
+    const jsonString = JSON.stringify(optimizationResult, null, 2);
+
+    const blob = new Blob([jsonString], {
+      type: 'application/json',
     });
-  }
 
-  return {
-    labels: frequencies,
-    datasets,
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'optimization_results.json';
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
-}, [optimizationResult, frfType]);
+  const chartOptions = useMemo(() => {
+    if (!optimizationResult) return {};
 
+    const frequencies = optimizationResult.frequency || [];
 
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: {
-        display: true,
-        text: '',
-      },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-      },
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Frequency (Hz)',
+    const minFrequency = Math.min(...frequencies);
+    const maxFrequency = Math.max(...frequencies);
+
+    return {
+      responsive: true,
+
+      maintainAspectRatio: false,
+
+      plugins: {
+        legend: {
+          position: 'top',
         },
-        ticks: {
-          callback: function (value, index, ticks) {
-            const totalTicks = 20;
-            const step = Math.floor(ticks.length / totalTicks);
-            return index % step === 0 ? this.getLabelForValue(value) : '';
+
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+        },
+
+        annotation: {
+          annotations: showControlBounds
+            ? {
+              controlLowerBound: {
+                type: 'line',
+
+                xMin:
+                  objectiveFunctionSearchLowerBound,
+
+                xMax:
+                  objectiveFunctionSearchLowerBound,
+
+                borderColor: 'red',
+
+                borderWidth: 2,
+
+                label: {
+                  display: true,
+
+                  content: 'Control Lower',
+                },
+              },
+
+              controlUpperBound: {
+                type: 'line',
+
+                xMin:
+                  objectiveFunctionSearchUpperBound,
+
+                xMax:
+                  objectiveFunctionSearchUpperBound,
+
+                borderColor: 'red',
+
+                borderWidth: 2,
+
+                label: {
+                  display: true,
+
+                  content: 'Control Upper',
+                },
+              },
+            }
+            : {},
+        },
+      },
+
+      scales: {
+        x: {
+          type: 'linear',
+
+          offset: false,
+
+          min: Number(minFrequency),
+
+          max: Number(maxFrequency),
+
+          title: {
+            display: true,
+            text: 'Frequency (Hz)',
           },
-          autoSkip: false,
+
+          ticks: {
+            precision: 2,
+          },
+        },
+
+        y: {
+          title: {
+            display: true,
+
+            text:
+              frfType === 'receptance'
+                ? 'Receptance (dB) ref. 1[m/N]'
+                : frfType === 'mobility'
+                  ? 'Mobility (dB) ref. 1[m/s/N]'
+                  : 'Inertance (dB) ref. 1[m/s²/N]',
+          },
         },
       },
-      y: {
-        title: {
-          display: true,
-          text:
-            frfType === 'receptance'
-              ? 'Receptance (dB) ref. 1[m/N]'
-              : frfType === 'mobility'
-                ? 'Mobility (dB) ref. 1[m/s/N]'
-                : 'Inertance (dB) ref. 1[m/s²/N]',
-        },
-      },
-    },
-  }), [frfType]);
+    };
+  }, [optimizationResult, frfType, showControlBounds]);
 
   const renderTable = (type, label, fields) => {
     const filtered = (optimizationResult.solution || []).filter(n => n.type === type);
@@ -237,33 +365,60 @@ const chartData = useMemo(() => {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body">
+        <div
+          className="card-body"
+          style={{ height: '500px' }}
+        >
           {chartData && <Line data={chartData} options={chartOptions} />}
         </div>
       </div>
 
-      <div className="d-flex gap-2 mb-3">
-        <button
-          className="btn btn-outline-primary"
-          onClick={() => setShowFullResponse(!showFullResponse)}
-        >
-          {showFullResponse ? 'Hide Full Response' : 'Show Full Response'}
-        </button>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex gap-2">
+
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => setShowFullResponse(!showFullResponse)}
+          >
+            {showFullResponse ? 'Hide Full Response' : 'Show Full Response'}
+          </button>
+
+          <button
+            className="btn btn-outline-success"
+            onClick={() => setShowNeutralizers(!showNeutralizers)}
+          >
+            {showNeutralizers ? 'Hide Optimal Neutralizers' : 'Show Optimal Neutralizers'}
+          </button>
+
+          <button
+            className="btn btn-outline-warning"
+            onClick={() => setShowDimensionNeutralizers(!showDimensionNeutralizers)}
+          >
+            {showDimensionNeutralizers
+              ? 'Hide Dimension Neutralizers'
+              : 'Show Dimension Neutralizers'}
+          </button>
+          <button
+            className="btn btn-outline-danger"
+            onClick={() =>
+              setShowControlBounds(!showControlBounds)
+            }
+          >
+            {showControlBounds
+              ? 'Hide Control Bounds'
+              : 'Show Control Bounds'}
+          </button>
+        </div>
 
         <button
-          className="btn btn-outline-success"
-          onClick={() => setShowNeutralizers(!showNeutralizers)}
+          className="btn btn-primary"
+          onClick={handleDownloadResults}
         >
-          {showNeutralizers ? 'Hide Optimal Neutralizers' : 'Show Optimal Neutralizers'}
+          Download Results
         </button>
-        <button
-          className="btn btn-outline-warning"
-          onClick={() => setShowDimensionNeutralizers(!showDimensionNeutralizers)}
-        >
-          {showDimensionNeutralizers ? 'Hide Dimension Neutralizers' : 'Show Dimension Neutralizers'}
-        </button>
-
       </div>
+
+
 
       {showFullResponse && (
         <div className="card mt-3">
@@ -277,7 +432,7 @@ const chartData = useMemo(() => {
         <div className="card mt-3">
           <div className="card-body">
             {renderTable(2, 'Viscous Neutralizers', [
-              'mass','modal_position', 'frequency', 'damp',
+              'mass', 'modal_position', 'frequency', 'damp',
             ])}
             {renderTable(1, 'Viscoelastic Neutralizers', [
               'mass',
@@ -286,7 +441,7 @@ const chartData = useMemo(() => {
               'viscoelastic_material',
             ])}
             {renderTable(0, 'User-defined Stiffness Neutralizers', [
-              'mass','modal_position', 'frequency', 'dynamic_stiffness',
+              'mass', 'modal_position', 'frequency', 'dynamic_stiffness',
             ])}
           </div>
         </div>
