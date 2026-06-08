@@ -8,6 +8,8 @@ import CalculationParameters from '../components/CalculationParameters';
 import Results from '../components/Results';
 import { optimizeNeutralizer } from '../services/apiService';
 import initialMaterials from '../Data/ViscoelasticMaterials.json';
+import { autofillOptimizationData }
+  from "../services/autofillService";
 
 const NeutralizerOptimization = () => {
   const [optimizationResult, setOptimizationResult] = useState(null);
@@ -88,7 +90,7 @@ const NeutralizerOptimization = () => {
       } else {
         auxModalPosition = currentModalPosition
       }
-        
+
       methods.setValue(modalPositionPath, auxModalPosition)
     })
   }
@@ -405,6 +407,17 @@ const NeutralizerOptimization = () => {
               }}
             >
               Save As New
+            </Button>
+            <Button
+              variant="warning"
+              onClick={() =>
+                autofillOptimizationData(
+                  methods.getValues,
+                  setValue
+                )
+              }
+            >
+              Autofill Optimization Data
             </Button>
 
           </div>
