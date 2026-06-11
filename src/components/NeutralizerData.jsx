@@ -9,6 +9,8 @@ import Plot from "react-plotly.js";
 const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
 	const array = row?.optimizationVariables?.[arrayType] || [];
 	const childIndex = array.findIndex(item => item.name === childName);
+  console.log(`childIndex = ${childIndex} e row = `)
+  console.log(row)
 	if (childIndex === -1) return ''; // optionally throw error
 	return property
 		? `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}.${property}`
@@ -77,7 +79,11 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 				{
 					name: "viscoelastic_material",
 					range: []
-				}
+				},
+        {
+          name: "dynamic_stiffness",
+          range: []
+        }
 			]
 		}
 	});
