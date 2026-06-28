@@ -1,8 +1,8 @@
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { Form, Row, Col } from 'react-bootstrap';
 
-const CalculationParameters = ({ control, errors }) => {
+const CalculationParameters = ({ control, errors, setValue }) => {
   const rules = {
     required: 'This field is required',
     pattern: {
@@ -10,6 +10,39 @@ const CalculationParameters = ({ control, errors }) => {
       message: 'Please enter a valid number',
     },
   };
+
+  const objectiveFunctionType = Number(
+    useWatch({
+      control,
+      name: "objectiveFunctionType",
+      defaultValue: 0,
+    })
+  );
+
+  const disableResponse =
+    objectiveFunctionType === 0 ||
+    objectiveFunctionType === 1 ||
+    objectiveFunctionType === 2 ||
+    objectiveFunctionType === 4;
+
+  const disableExcitation =
+    objectiveFunctionType === 2 ||
+    objectiveFunctionType === 4 ||
+    objectiveFunctionType === 5;
+
+  console.log("disableExcitation")
+  console.log(objectiveFunctionType)
+  console.log(disableExcitation)
+
+  useEffect(() => {
+    if (disableResponse) {
+      setValue("responseNodeOptimization", 0);
+    }
+
+    if (disableExcitation) {
+      setValue("excitationNodeOptimization", 0);
+    }
+  }, [objectiveFunctionType, disableResponse, disableExcitation, setValue]);
 
   const parseValue = (value) => {
     const parsed = parseFloat(value);
@@ -107,7 +140,31 @@ const CalculationParameters = ({ control, errors }) => {
           </Form.Group>
         </Col>
       </Row>
-
+      <Row className="mb-3">
+        <Col md={6}>
+          <Form.Group controlId="objectiveFunctionType">
+            <Form.Label>Objective Function</Form.Label>
+            <Controller
+              name="objectiveFunctionType"
+              control={control}
+              defaultValue={0}
+              render={({ field }) => (
+                <Form.Select
+                  {...field}
+                  onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                >
+                  <option value={0}>Modal coordinates (point excitation)</option>
+                  <option value={1}>Modal coordinates (distributed excitation)</option>
+                  <option value={2}>Modal Frobenius norm</option>
+                  <option value={3}>Single FRF H(K,S)</option>
+                  <option value={4}>Global FRF Frobenius norm</option>
+                  <option value={5}>FRF column norm</option>
+                </Form.Select>
+              )}
+            />
+          </Form.Group>
+        </Col>
+      </Row>
       <Row className="mb-3">
         <Col>
           <Form.Group controlId="excitationNodeOptimization">
@@ -121,6 +178,7 @@ const CalculationParameters = ({ control, errors }) => {
                 <>
                   <Form.Control
                     {...field}
+                    disabled={disableExcitation}
                     type="number"
                     step="1"
                     placeholder="e.g., 3"
@@ -150,6 +208,7 @@ const CalculationParameters = ({ control, errors }) => {
                 <>
                   <Form.Control
                     {...field}
+                    disabled={disableResponse}
                     type="number"
                     step="1"
                     placeholder="e.g., 2"

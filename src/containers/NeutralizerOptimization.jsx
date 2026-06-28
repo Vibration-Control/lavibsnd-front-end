@@ -42,6 +42,7 @@ const NeutralizerOptimization = () => {
       responseNodeOptimization: '',
       excitationNodePlot: '',
       responseNodePlot: '',
+      objectiveFunctionType:3,
       plotType: '',
       objectiveFunctionSearchLowerBound: '',
       objectiveFunctionSearchUpperBound: '',
@@ -535,6 +536,7 @@ const NeutralizerOptimization = () => {
               <CalculationParameters
                 control={methods.control}
                 errors={methods.formState.errors}
+                setValue={methods.setValue}
               />
             </Accordion.Body>
           </Accordion.Item>
