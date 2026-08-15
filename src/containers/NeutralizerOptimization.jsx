@@ -42,7 +42,7 @@ const NeutralizerOptimization = () => {
       responseNodeOptimization: '',
       excitationNodePlot: '',
       responseNodePlot: '',
-      objectiveFunctionType:3,
+      objectiveFunctionType: 3,
       plotType: '',
       objectiveFunctionSearchLowerBound: '',
       objectiveFunctionSearchUpperBound: '',
@@ -228,6 +228,9 @@ const NeutralizerOptimization = () => {
   };
 
   /**
+  * Opens an existing project JSON using the File System Access API (preferred)
+  */
+  /**
    * Opens an existing project JSON using the File System Access API (preferred)
    */
   const openExistingProject = async () => {
@@ -252,21 +255,89 @@ const NeutralizerOptimization = () => {
       setFileName(file.name);
 
       const currentViscoelasticMaterials =
-        methods.getValues().additionalParameters.viscoelasticMaterials || [];
+        methods.getValues().additionalParameters?.viscoelasticMaterials || [];
 
-      // populate form values
+      const newViscoelasticMaterials =
+        jsonData.additionalParameters?.viscoelasticMaterials || [];
+
+      /**
+       * Returns true if two viscoelastic materials have the same
+       * properties, ignoring both "name" and "workingTemperature".
+       */
+      const haveSameValuesIgnoringNameAndWorkingTemperature = (
+        material1,
+        material2
+      ) => {
+        const ignoredKeys = ['name', 'workingTemperature'];
+
+        const keys1 = Object.keys(material1).filter(
+          (key) => !ignoredKeys.includes(key)
+        );
+
+        const keys2 = Object.keys(material2).filter(
+          (key) => !ignoredKeys.includes(key)
+        );
+
+        // They must have the same set of properties
+        if (keys1.length !== keys2.length) {
+          return false;
+        }
+
+        return keys1.every(
+          (key) =>
+            Object.prototype.hasOwnProperty.call(material2, key) &&
+            material1[key] === material2[key]
+        );
+      };
+
+      /**
+       * Add each new material while removing any existing material
+       * that has either:
+       *  - the same name, OR
+       *  - the same values for all properties except
+       *    name and workingTemperature.
+       */
+      let updatedViscoelasticMaterials = [...currentViscoelasticMaterials];
+
+      newViscoelasticMaterials.forEach((newMaterial) => {
+        updatedViscoelasticMaterials = updatedViscoelasticMaterials.filter(
+          (existingMaterial) => {
+            const sameName =
+              existingMaterial.name === newMaterial.name;
+
+            const sameValuesIgnoringNameAndWorkingTemperature =
+              haveSameValuesIgnoringNameAndWorkingTemperature(
+                existingMaterial,
+                newMaterial
+              );
+
+            return (
+              !sameName &&
+              !sameValuesIgnoringNameAndWorkingTemperature
+            );
+          }
+        );
+
+        updatedViscoelasticMaterials.push(newMaterial);
+      });
+
+      // Populate form values
       Object.entries(jsonData).forEach(([key, value]) => {
         setValue(key, value, { shouldValidate: true });
       });
 
-      const newViscoelasticMaterials =
-        jsonData.additionalParameters?.viscoelasticMaterials || [];
+      // Set the merged/deduplicated materials
       setValue(
         'additionalParameters.viscoelasticMaterials',
-        [...currentViscoelasticMaterials, ...newViscoelasticMaterials]
+        updatedViscoelasticMaterials,
+        { shouldValidate: true }
       );
 
       console.log('Loaded JSON:', jsonData);
+      console.log(
+        'Updated viscoelastic materials:',
+        updatedViscoelasticMaterials
+      );
     } catch (error) {
       console.error('Error opening file:', error);
       alert(
