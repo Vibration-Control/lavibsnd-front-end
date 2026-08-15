@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './containers/Home';
@@ -13,12 +13,17 @@ const App = () => {
         <div style={{ height: '5vh' }}>
           <Header />
         </div>
+
         <div style={{ height: '90vh', overflowY: 'auto' }}>
           <Routes>
             <Route exact path="/" element={<Home />} />
-            <Route path="/neutralizer-optimization" element={<NeutralizerOptimization />} />
+            <Route
+              path="/neutralizer-optimization"
+              element={<NeutralizerOptimization />}
+            />
           </Routes>
         </div>
+
         <div style={{ height: '5vh' }}>
           <Footer />
         </div>

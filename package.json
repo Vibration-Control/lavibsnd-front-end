@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A modern front-end for the Vibration Neutralizer software using React and Bootstrap",
   "main": "index.js",
+  "homepage": ".",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
