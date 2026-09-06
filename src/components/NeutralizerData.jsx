@@ -5,12 +5,13 @@ import ViscoelasticMaterials from './ViscoelasticMaterials';
 import TemperatureDetuning from './TemperatureDetuning';
 import DynamicStiffness from './DynamicStiffness';
 import Plot from "react-plotly.js";
+import ArrayInputControl from '../atom/ArrayInputControl';
 
 const getFieldPath = (arrayType, row, childName, rowIndex, property = '') => {
 	const array = row?.optimizationVariables?.[arrayType] || [];
 	const childIndex = array.findIndex(item => item.name === childName);
-  console.log(`childIndex = ${childIndex} e row = `)
-  console.log(row)
+	console.log(`childIndex = ${childIndex} e row = `)
+	console.log(row)
 	if (childIndex === -1) return ''; // optionally throw error
 	return property
 		? `neutralizers.${rowIndex}.optimizationVariables.${arrayType}.${childIndex}.${property}`
@@ -80,10 +81,10 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 					name: "viscoelastic_material",
 					range: []
 				},
-        {
-          name: "dynamic_stiffness",
-          range: []
-        }
+				{
+					name: "dynamic_stiffness",
+					range: []
+				}
 			]
 		}
 	});
@@ -350,7 +351,7 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 
 	const assignNodes = () => {
 
-    if (!selectedNodes.length) return;
+		if (!selectedNodes.length) return;
 
 		const path = `neutralizers.${selectedNeutralizer}.optimizationVariables.integer`;
 
@@ -519,7 +520,11 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 											defaultValue=''
 											render={({ field, fieldState }) => (
 												<>
-													<Form.Control {...field} type="text" placeholder="[0,1,4,7]" />
+													<ArrayInputControl
+														{...field}
+														enableIntegerRange
+														placeholder="e.g. [0, 1, 2]"
+													/>
 													{fieldState.error && (
 														<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 													)}
@@ -534,7 +539,12 @@ const NeutralizerData = ({ control, errors, getValues, setValue, clearErrors }) 
 											defaultValue=''
 											render={({ field, fieldState }) => (
 												<>
-													<Form.Control {...field} type="text" disabled={!isModalPositionTipEnabled} placeholder="[0,1,4,7]" />
+													<ArrayInputControl
+														{...field}
+														disabled={!isModalPositionTipEnabled}
+														enableIntegerRange
+														placeholder="e.g. [0, 1, 2]"
+													/>
 													{fieldState.error && (
 														<Form.Text className="text-danger">{fieldState.error.message}</Form.Text>
 													)}

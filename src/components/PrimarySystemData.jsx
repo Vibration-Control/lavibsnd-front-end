@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Table, Button, Form } from 'react-bootstrap';
 import PrimarySystemChart from './PrimarySystemChart'
+import ArrayInputControl from '../atom/ArrayInputControl';
 
 const PrimarySystemData = ({ control, setValue }) => {
 	const { fields: checkFields, append: appendCheck, remove: removeCheck } = useFieldArray({
@@ -165,14 +166,14 @@ const PrimarySystemData = ({ control, setValue }) => {
 									name={`primarySystemModes.${index}`}
 									control={control}
 									rules={modesRules}
-									defaultValue=''
+									defaultValue=""
 									render={({ field, fieldState }) => (
 										<>
-											<Form.Control
+											<ArrayInputControl
 												{...field}
-												type="text"
-												placeholder='e.g. [0, 1, 2]'
+												placeholder="e.g. [0, 1, 2]"
 											/>
+
 											{fieldState.error && (
 												<Form.Text className="text-danger">
 													{fieldState.error.message}
