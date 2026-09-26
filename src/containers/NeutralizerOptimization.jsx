@@ -5,6 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import PrimarySystemData from '../components/PrimarySystemData';
 import NeutralizerData, { getFieldPath } from '../components/NeutralizerData';
 import CalculationParameters from '../components/CalculationParameters';
+import RstImportModal from "../components/RstImportModal";
 import Results from '../components/Results';
 import { optimizeNeutralizer } from '../services/apiService';
 import initialMaterials from '../Data/ViscoelasticMaterials.json';
@@ -21,6 +22,7 @@ const NeutralizerOptimization = () => {
   const [completed, setCompleted] = useState(false);
   const [totalTime, setTotalTime] = useState(null);
   const [cancelled, setCancelled] = useState(false);
+  const [showRstModal, setShowRstModal] = useState(false);
 
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -390,23 +392,18 @@ const NeutralizerOptimization = () => {
     }
   };
 
-  const openRst = async () => {
+  const openRst = async ({ file, modeProjection }) => {
     try {
-      // Let user pick a file
-      const fileHandle = await window.showOpenFilePicker({
-        types: [
-          {
-            description: '.rst Files',
-            accept: { 'application/octet-stream': ['.rst'] },
-          },
-        ],
-        multiple: false,
-      });
-
-      const file = await fileHandle[0].getFile();
-
       const formData = new FormData();
+
       formData.append("file", file);
+
+      formData.append(
+        "options",
+        JSON.stringify({
+          modeProjection,
+        })
+      );
 
       const response = await fetch("http://localhost:5000/convertRst", {
         method: "POST",
@@ -420,16 +417,29 @@ const NeutralizerOptimization = () => {
       const data = await response.json();
 
       // Existing values
-      methods.setValue("primarySystemNaturalFrequencies", data.PrimarySystemNaturalFrequencies || []);
-      methods.setValue("primarySystemModes", data.PrimarySystemModes || []);
+      methods.setValue(
+        "primarySystemNaturalFrequencies",
+        data.PrimarySystemNaturalFrequencies || []
+      );
 
-      // ✅ NEW: Set node positions under additionalParameters
+      methods.setValue(
+        "primarySystemModes",
+        data.PrimarySystemModes || []
+      );
+
+      // Node positions
       methods.setValue(
         "additionalParameters.PrimarySystemNodePositions",
         data.PrimarySystemNodePositions || []
       );
 
-      console.log("RST loaded:", data);
+      console.log("RST loaded:", {
+        file: file.name,
+        modeProjection,
+        data,
+      });
+
+      setShowRstModal(false);
 
     } catch (error) {
       console.error("Failed to open or process .rst:", error);
@@ -453,7 +463,7 @@ const NeutralizerOptimization = () => {
 
             <Button
               variant="secondary"
-              onClick={openRst}
+              onClick={() => setShowRstModal(true)}
             >
               Open .rst
             </Button>
@@ -620,6 +630,11 @@ const NeutralizerOptimization = () => {
           </Accordion.Item>
         </Accordion>
       </Container>
+      <RstImportModal
+        show={showRstModal}
+        onHide={() => setShowRstModal(false)}
+        onImport={openRst}
+      />
     </FormProvider>
   );
 };
